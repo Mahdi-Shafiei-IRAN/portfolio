@@ -1,0 +1,35 @@
+# Secrets & local env — never bake into image layers
+.env
+*.env
+
+# Local database & uploaded media
+db.sqlite3
+media/
+
+# Build artifacts / virtualenv
+.venv/
+venv/
+staticfiles/
+__pycache__/
+*.py[cod]
+
+# VCS & project meta
+.git/
+.gitignore
+.superpowers/
+graphify-out/
+
+# Docs, plans, tooling
+docs/
+.claude/
+CLAUDE.md
+README.md
+.dockerignore
+Dockerfile
+docker-compose*.yml
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -72,7 +72,15 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Django 5.1+ configures storage via STORAGES (the old STATICFILES_STORAGE
+# setting is ignored). WhiteNoise compresses static files; the non-manifest
+# backend is used deliberately so an optional, not-yet-added asset (e.g. the
+# hero video) does not raise "Missing staticfiles manifest entry" at runtime.
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

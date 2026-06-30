@@ -19,10 +19,13 @@ RUN pip install --no-cache-dir -r requirements/prod.txt
 
 COPY . .
 
-# Collect static for production image
+# Collect static for production image.
+# These ARGs only satisfy settings import at build time — collectstatic never
+# connects to the database, so the DATABASE_URL value just needs to parse.
 ARG DJANGO_SETTINGS_MODULE=config.settings.prod
 ARG SECRET_KEY=build-time-dummy-key
 ARG ALLOWED_HOSTS=localhost
+ARG DATABASE_URL=postgres://build:build@localhost:5432/build
 RUN python manage.py collectstatic --no-input
 
 EXPOSE 8000
