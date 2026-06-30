@@ -188,7 +188,7 @@
         tl.from(children, { y: 40, opacity: 0, stagger: 0.12, duration: 0.9, ease: "power3.out" });
     }
 
-    const FADE = 0.07;                       // smooth fade-in/out zone (in scroll progress)
+    const FADE = 0.09;                       // smooth fade-in/out zone (in scroll progress)
     const smooth = (t) => t * t * (3 - 2 * t); // ease the fade so it's buttery, not linear
     let played = false;
     ScrollTrigger.create({

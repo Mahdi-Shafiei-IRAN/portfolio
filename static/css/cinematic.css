@@ -151,7 +151,7 @@ body {
 
 /* ---------- Projects ---------- */
 .section-projects { flex-direction: column; justify-content: center; padding: 0 5vw; }
-.projects-head { text-align: center; margin-bottom: 2.2rem; }
+.projects-head { text-align: center; margin-bottom: 2.6rem; }
 .projects-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; width: min(1080px, 92vw); margin: 0 auto; }
 .project-card { padding: 1.7rem 1.7rem 1.5rem; display: flex; flex-direction: column; transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s, border-color .35s; }
 .project-card:hover { transform: translateY(-8px); }
