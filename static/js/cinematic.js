@@ -188,6 +188,8 @@
         tl.from(children, { y: 40, opacity: 0, stagger: 0.12, duration: 0.9, ease: "power3.out" });
     }
 
+    const FADE = 0.07;                       // smooth fade-in/out zone (in scroll progress)
+    const smooth = (t) => t * t * (3 - 2 * t); // ease the fade so it's buttery, not linear
     let played = false;
     ScrollTrigger.create({
       trigger: scrollContainer,
@@ -196,15 +198,20 @@
       scrub: true,
       onUpdate: (self) => {
         const p = self.progress;
-        const visible = p >= enter - 0.02 && p <= leave + 0.02;
-        section.style.opacity = visible ? 1 : (persist && p > leave ? 1 : 0);
-        section.style.pointerEvents = visible ? "auto" : "none";
-        if (p >= enter - 0.02 && !played) { tl.play(); played = true; }
-        else if (p < enter - 0.05 && played && !persist) { tl.reverse(); played = false; }
+        let op;
+        if (p < enter - FADE) op = 0;
+        else if (p < enter) op = smooth((p - (enter - FADE)) / FADE);   // fade in
+        else if (p <= leave) op = 1;                                     // hold
+        else if (!persist && p <= leave + FADE) op = smooth(1 - (p - leave) / FADE); // fade out
+        else op = persist ? 1 : 0;                                       // persisted CTA stays
+        section.style.opacity = op;
+        section.style.pointerEvents = op > 0.5 ? "auto" : "none";
+        // Stagger the children in once as the section comes into view; reverse when leaving above
+        if (p >= enter - FADE && !played) { tl.play(); played = true; }
+        else if (p < enter - FADE - 0.02 && played && !persist) { tl.reverse(); played = false; }
       },
     });
     gsap.set(section, { opacity: 0 });
-    if (persist) gsap.set(section, { opacity: 0 });
   }
 
   /* ---------- Counters ---------- */
