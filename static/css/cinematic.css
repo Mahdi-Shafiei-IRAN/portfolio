@@ -124,7 +124,7 @@ body {
 .marquee-text { white-space: nowrap; font-family: var(--font-display); font-weight: 800; font-size: 13vw; letter-spacing: .02em; color: rgba(34,211,238,.12); will-change: transform; }
 
 /* ---------- Scroll container & sections ---------- */
-#scroll-container { position: relative; z-index: 30; height: 360vh; }
+#scroll-container { position: relative; z-index: 30; height: 215vh; }
 .scroll-section { position: absolute; left: 0; width: 100%; display: flex; align-items: center; min-height: 100vh; padding: 0 5vw; will-change: transform, opacity; perspective: 1200px; }
 .align-left  { justify-content: flex-start; padding-right: 46vw; }
 .align-right { justify-content: flex-end;  padding-left: 46vw; }
@@ -210,7 +210,7 @@ body {
     .about-photo { width: 130px; }
 
     /* Scroll sections: full-width, centered, no fixed max-widths */
-    #scroll-container { height: 300vh; }
+    #scroll-container { height: 195vh; }
     .scroll-section { padding: 6rem 6vw; min-height: 100vh; justify-content: center !important; }
     .align-left, .align-right, #skills.scroll-section { padding-left: 6vw; padding-right: 6vw; }
     .section-inner, .skills-card { max-width: 100%; width: 100%; }
