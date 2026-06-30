@@ -52,27 +52,28 @@
         </div>
 
         <div class="intro-about" id="about">
-            <figure class="about-photo reveal">
-                <!-- Drop your photo at static/img/profile.jpg to replace the placeholder -->
-                <img src="{% static 'img/profile.jpg' %}" alt="Mahdi"
-                     onerror="this.style.display='none';this.parentNode.classList.add('no-photo');">
-                <figcaption>Your photo →<br>static/img/profile.jpg</figcaption>
-            </figure>
-            <div class="about-copy">
-                <span class="section-label reveal">About me</span>
-                <h2 class="about-heading reveal">Backend developer who ships maintainable systems.</h2>
-                <p class="about-body reveal">I'm a Django developer focused on clean architecture, solid database
-                    design, and REST APIs — I own the full backend lifecycle, from data modeling to Docker &amp; Nginx.</p>
-                <div class="about-meta reveal">
-                    <div><span class="about-meta-k">Focus</span><span class="about-meta-v">Backend · APIs</span></div>
-                    <div><span class="about-meta-k">Stack</span><span class="about-meta-v">Python · Django</span></div>
-                    <div><span class="about-meta-k">Open to</span><span class="about-meta-v">Roles · Freelance</span></div>
+            <div class="glass-card about-card tilt reveal">
+                <figure class="about-photo">
+                    <!-- Drop your photo at static/img/profile.jpg to replace the placeholder -->
+                    <img src="{% static 'img/profile.jpg' %}" alt="Mahdi"
+                         onerror="this.style.display='none';this.parentNode.classList.add('no-photo');">
+                    <figcaption>Your photo →<br>static/img/profile.jpg</figcaption>
+                </figure>
+                <div class="about-copy">
+                    <span class="section-label">About me</span>
+                    <h2 class="about-heading">Backend developer who ships maintainable systems.</h2>
+                    <p class="about-body">I'm a Django developer focused on clean architecture, solid database
+                        design, and REST APIs — I own the full backend lifecycle, from data modeling to Docker &amp; Nginx.</p>
+                    <div class="about-meta">
+                        <div><span class="about-meta-k">Focus</span><span class="about-meta-v">Backend · APIs</span></div>
+                        <div><span class="about-meta-k">Stack</span><span class="about-meta-v">Python · Django</span></div>
+                        <div><span class="about-meta-k">Open to</span><span class="about-meta-v">Roles · Freelance</span></div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="scroll-indicator" aria-hidden="true">
-            <span>Scroll — the video plays as you go</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M19 12l-7 7-7-7"/></svg>
         </div>
     </section>

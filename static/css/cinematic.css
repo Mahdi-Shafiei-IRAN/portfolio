@@ -50,7 +50,7 @@ body {
     box-shadow: 0 0 20px rgba(34,211,238,.45), inset 0 0 12px rgba(138,243,255,.22);
     transition: width .3s cubic-bezier(.2,.8,.2,1), height .3s cubic-bezier(.2,.8,.2,1), background .3s, border-color .3s;
 }
-.cursor-orb.active { width: 52px; height: 52px; background: rgba(34,211,238,.10); border-color: rgba(138,243,255,.9); }
+.cursor-orb.active { width: 34px; height: 34px; background: rgba(34,211,238,.09); border-color: rgba(138,243,255,.85); }
 .cursor-dot { z-index: 10000; width: 5px; height: 5px; border-radius: 50%; background: var(--acc-bright); box-shadow: 0 0 8px var(--acc); }
 .cursor-trail { z-index: 9998; border-radius: 50%; background: rgba(45,212,191,.5); filter: blur(1px); }
 @media (hover: none) { .cursor-orb, .cursor-dot, .cursor-trail { display: none; } }
@@ -92,20 +92,21 @@ body {
 .site-header nav a:hover::after { width: 100%; }
 
 /* ---------- Intro ---------- */
-.intro { position: relative; z-index: 40; min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; padding: 9rem clamp(1.5rem, 6vw, 6rem) 4.5rem; gap: 2rem; }
+.intro { position: relative; z-index: 40; min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; padding: 7rem clamp(1.5rem, 6vw, 6rem) 3rem; gap: 2rem; }
 .intro-name { grid-column: 2; grid-row: 1; align-self: start; justify-self: end; text-align: right; }
 .section-label { display: inline-block; font-size: .78rem; letter-spacing: .3em; text-transform: uppercase; color: var(--acc); margin-bottom: 1rem; }
 .intro-heading { font-family: var(--font-display); font-weight: 800; font-size: clamp(3rem, 9vw, 8.5rem); line-height: .9; letter-spacing: -.02em; background: var(--acc-grad); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 70px rgba(34,211,238,.22); }
-.intro-about { grid-column: 1; grid-row: 2; align-self: end; justify-self: start; display: flex; gap: 1.8rem; align-items: flex-end; max-width: 660px; }
-.about-photo { position: relative; width: clamp(150px, 16vw, 200px); aspect-ratio: 4 / 5; flex-shrink: 0; border-radius: 18px; overflow: hidden; border: 1px solid var(--glass-brd); background: linear-gradient(160deg, #0c1b22, #07090e); box-shadow: 0 22px 50px rgba(0,0,0,.5), inset 0 0 50px rgba(34,211,238,.07); }
+.intro-about { grid-column: 1; grid-row: 2; align-self: end; justify-self: start; max-width: 680px; }
+.about-card { display: flex; gap: 1.5rem; align-items: center; padding: 1.5rem 1.7rem; }
+.about-photo { position: relative; width: clamp(110px, 11vw, 148px); aspect-ratio: 4 / 5; flex-shrink: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--glass-brd); background: linear-gradient(160deg, #0c1b22, #07090e); box-shadow: inset 0 0 40px rgba(34,211,238,.08); }
 .about-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .about-photo figcaption { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; text-align: center; color: var(--text-dim); font-size: .68rem; letter-spacing: .1em; line-height: 1.8; text-transform: uppercase; }
 .about-photo.no-photo { display: flex; }
 .about-photo.no-photo figcaption { display: flex; }
 .about-photo.no-photo::after { content: ""; position: absolute; width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--acc); opacity: .4; top: 26%; }
-.about-heading { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.4rem, 2.4vw, 2.2rem); line-height: 1.12; letter-spacing: -.01em; margin: .4rem 0 .9rem; color: var(--text); text-shadow: 0 2px 24px rgba(0,0,0,.6); }
-.about-body { font-size: clamp(.95rem, 1.2vw, 1.08rem); line-height: 1.7; color: var(--text-dim); max-width: 46ch; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
-.about-meta { display: flex; flex-wrap: wrap; gap: 1.8rem; margin-top: 1.4rem; }
+.about-heading { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.2rem, 1.9vw, 1.75rem); line-height: 1.14; letter-spacing: -.01em; margin: .3rem 0 .7rem; color: var(--text); }
+.about-body { font-size: clamp(.9rem, 1.1vw, 1rem); line-height: 1.65; color: var(--text-dim); max-width: 44ch; }
+.about-meta { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.1rem; }
 .about-meta-k { display: block; font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--acc); margin-bottom: .3rem; }
 .about-meta-v { font-family: var(--font-display); font-weight: 600; font-size: .98rem; color: var(--text); }
 .reveal { opacity: 0; transform: translateY(24px); }
@@ -164,9 +165,9 @@ body {
 .project-empty { grid-column: 1 / -1; text-align: center; }
 .project-empty a { color: var(--acc); }
 
-/* ---------- Skills — one card ---------- */
-#skills.scroll-section { justify-content: center; padding: 0 5vw; }
-.skills-card { width: min(820px, 92vw); }
+/* ---------- Skills — one card, aligned LEFT (mirrors Contact on the right) ---------- */
+#skills.scroll-section { justify-content: flex-start; padding: 0 5vw; padding-right: 42vw; }
+.skills-card { width: min(760px, 100%); }
 .skills-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.8rem; margin-top: 1.3rem; }
 .skill-group-name { font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--acc); letter-spacing: .02em; margin-bottom: 1rem; padding-bottom: .7rem; border-bottom: 1px solid rgba(34,211,238,.2); }
 .skill-list { list-style: none; display: flex; flex-direction: column; gap: .6rem; }
@@ -191,8 +192,10 @@ body {
     .header-glass { padding: .6rem 1rem; }
     .intro { grid-template-columns: 1fr; grid-template-rows: auto auto; padding: 7rem 6vw 5rem; gap: 3rem; }
     .intro-name { grid-column: 1; grid-row: 1; justify-self: start; text-align: left; }
-    .intro-about { grid-column: 1; grid-row: 2; flex-direction: column; align-items: flex-start; }
+    .intro-about { grid-column: 1; grid-row: 2; }
+    .about-card { flex-direction: column; align-items: flex-start; }
     .about-photo { width: 150px; }
+    #skills.scroll-section { padding-right: 6vw; }
     #scroll-container { height: 320vh; }
     .scroll-section { padding: 0 6vw; justify-content: center !important; }
     .align-left, .align-right { padding-left: 6vw; padding-right: 6vw; }

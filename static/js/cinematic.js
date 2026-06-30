@@ -111,11 +111,13 @@
     gsap.ticker.add((time) => lenis.raf(time * 1000));
     gsap.ticker.lagSmoothing(0);
 
-    /* Frame-to-scroll binding — THE scroll-driven video */
+    /* Frame-to-scroll binding — THE scroll-driven video.
+       Spans the WHOLE page (start 0 → max) so the video begins playing from
+       the very first scroll, including through the intro — the hero is not a
+       static screen you pass before the video starts. */
     ScrollTrigger.create({
-      trigger: scrollContainer,
-      start: "top top",
-      end: "bottom bottom",
+      start: 0,
+      end: "max",
       scrub: true,
       onUpdate: (self) => {
         const accel = Math.min(self.progress * FRAME_SPEED, 1);
@@ -264,7 +266,8 @@
   function init3DTilt(reduce) {
     if (reduce) return;
     document.querySelectorAll(".tilt").forEach((card) => {
-      const parent = card.closest(".scroll-section");
+      const parent = card.closest(".scroll-section") || card.parentElement;
+      if (!parent) return;
       parent.addEventListener("mousemove", (e) => {
         const r = card.getBoundingClientRect();
         const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
