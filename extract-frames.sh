@@ -45,11 +45,22 @@ ffmpeg -loglevel error -i "$VIDEO" \
   -c:v libwebp -quality 80 "${OUT_DIR}/frame_%04d.webp"
 
 COUNT=$(find "$OUT_DIR" -name 'frame_*.webp' | wc -l | tr -d ' ')
-echo "Done     : $COUNT frames in $OUT_DIR ($(du -sh "$OUT_DIR" | cut -f1))"
+echo "Desktop  : $COUNT frames in $OUT_DIR ($(du -sh "$OUT_DIR" | cut -f1))"
 
-# Update FRAME_COUNT in views.py
+# Lighter mobile set: ~half the frames at 720px (saves data + memory on phones)
+MOBILE_DIR="static/frames-m"
+MOBILE_FPS=$(awk -v t=120 -v d="$DURATION" 'BEGIN{f=t/d; if(f<1)f=1; printf "%.4f", f}')
+rm -rf "$MOBILE_DIR"; mkdir -p "$MOBILE_DIR"
+ffmpeg -loglevel error -i "$VIDEO" \
+  -vf "fps=${MOBILE_FPS},scale=720:-1" \
+  -c:v libwebp -quality 72 "${MOBILE_DIR}/frame_%04d.webp"
+COUNT_M=$(find "$MOBILE_DIR" -name 'frame_*.webp' | wc -l | tr -d ' ')
+echo "Mobile   : $COUNT_M frames in $MOBILE_DIR ($(du -sh "$MOBILE_DIR" | cut -f1))"
+
+# Update both counts in views.py
 if [[ -f "$VIEWS" ]]; then
   sed -i -E "s/^FRAME_COUNT = [0-9]+/FRAME_COUNT = ${COUNT}/" "$VIEWS"
-  echo "Updated  : FRAME_COUNT = ${COUNT} in ${VIEWS}"
+  sed -i -E "s/^FRAME_COUNT_MOBILE = [0-9]+/FRAME_COUNT_MOBILE = ${COUNT_M}/" "$VIEWS"
+  echo "Updated  : FRAME_COUNT=${COUNT}, FRAME_COUNT_MOBILE=${COUNT_M} in ${VIEWS}"
 fi
 echo "Next     : restart the dev server (or rebuild) to see the new video."

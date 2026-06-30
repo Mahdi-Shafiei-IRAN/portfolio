@@ -12,7 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/cinematic.css' %}">
 </head>
-<body data-frames-base="{% static 'frames/' %}" data-frame-count="{{ frame_count }}">
+<body data-frames-base="{% static 'frames/' %}" data-frame-count="{{ frame_count }}"
+      data-frames-base-m="{% static 'frames-m/' %}" data-frame-count-m="{{ frame_count_mobile }}">
 
     <!-- Custom glass-ball cursor (orb + precise dot; trail dots added by JS) -->
     <div class="cursor-orb" aria-hidden="true"></div>
@@ -34,7 +35,7 @@
     <!-- 3. Glassy fixed header -->
     <header class="site-header">
         <div class="header-glass">
-            <a href="#hero" class="logo">Mahdi Shafiei</a>
+            <a href="{% url 'core:home' %}" class="logo">Mahdi Shafiei</a>
             <nav>
                 <a href="#hero">About</a>
                 <a href="#projects">Projects</a>
@@ -79,7 +80,7 @@
 
     <!-- 6. Marquee -->
     <div class="marquee-wrap" data-scroll-speed="-28" aria-hidden="true">
-        <div class="marquee-text">PYTHON · DJANGO · POSTGRESQL · DOCKER · REST · LINUX · PYTHON · DJANGO · POSTGRESQL · DOCKER · REST · LINUX ·</div>
+        <div class="marquee-text">Mahdi Shafiei</div>
     </div>
 
     <!-- 7. Scroll container (cinematic, scroll-scrubbed — kept tight for density) -->

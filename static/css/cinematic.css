@@ -92,7 +92,8 @@ body {
 .site-header nav a:hover::after { width: 100%; }
 
 /* ---------- Intro ---------- */
-.intro { position: relative; z-index: 40; min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; padding: 7rem clamp(1.5rem, 6vw, 6rem) 3rem; gap: 2rem; }
+.intro { position: relative; z-index: 40; min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 1fr 1fr; padding: 7rem clamp(1.5rem, 6vw, 6rem) 3rem; gap: 2rem; }
+.intro-name, .intro-about { min-width: 0; }
 .intro-name { grid-column: 2; grid-row: 1; align-self: start; justify-self: end; text-align: right; }
 .section-label { display: inline-block; font-size: .78rem; letter-spacing: .3em; text-transform: uppercase; color: var(--acc); margin-bottom: 1rem; }
 .intro-heading { font-family: var(--font-display); font-weight: 800; font-size: clamp(3rem, 9vw, 8.5rem); line-height: .9; letter-spacing: -.02em; background: var(--acc-grad); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 70px rgba(34,211,238,.22); }
@@ -182,24 +183,53 @@ body {
 .cta-socials a { color: var(--text-dim); text-decoration: none; font-size: .82rem; letter-spacing: .12em; text-transform: uppercase; transition: color .2s; }
 .cta-socials a:hover { color: var(--acc); }
 
-/* ---------- Mobile / responsive ---------- */
+/* ---------- Responsive ---------- */
 @media (max-width: 900px) {
     .projects-grid { grid-template-columns: repeat(2, 1fr); }
+    .skills-cols { grid-template-columns: 1fr 1fr; }
+    .section-inner { max-width: 60vw; }
 }
+
 @media (max-width: 768px) {
-    .site-header nav { gap: 1rem; }
-    .site-header nav a { font-size: .66rem; letter-spacing: .08em; }
-    .header-glass { padding: .6rem 1rem; }
-    .intro { grid-template-columns: 1fr; grid-template-rows: auto auto; padding: 7rem 6vw 5rem; gap: 3rem; }
+    /* Header: logo on row 1, nav wraps to a centered row 2 — never overflows */
+    .site-header { padding: .8rem 4vw; }
+    .header-glass { flex-wrap: wrap; justify-content: center; gap: .45rem .6rem; padding: .65rem .9rem; border-radius: 20px; }
+    .logo { flex: 0 0 100%; text-align: center; font-size: 1.05rem; }
+    .site-header nav { width: 100%; flex-wrap: wrap; justify-content: center; gap: .5rem 1.1rem; }
+    .site-header nav a { font-size: .62rem; letter-spacing: .05em; }
+
+    /* Intro: stacked, name then about card; everything fits the viewport width */
+    .intro { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; min-height: auto; padding: 8.5rem 6vw 3rem; gap: 2.2rem; }
     .intro-name { grid-column: 1; grid-row: 1; justify-self: start; text-align: left; }
-    .intro-about { grid-column: 1; grid-row: 2; }
-    .about-card { flex-direction: column; align-items: flex-start; }
-    .about-photo { width: 150px; }
-    #skills.scroll-section { padding-right: 6vw; }
-    #scroll-container { height: 320vh; }
-    .scroll-section { padding: 0 6vw; justify-content: center !important; }
-    .align-left, .align-right { padding-left: 6vw; padding-right: 6vw; }
+    .intro-heading { font-size: clamp(3.4rem, 20vw, 6rem); }
+    .section-label { letter-spacing: .14em; font-size: .7rem; }
+
+    .intro-about { grid-column: 1; grid-row: 2; max-width: 100%; width: 100%; }
+    .about-card { flex-direction: column; align-items: flex-start; gap: 1.2rem; padding: 1.4rem; width: 100%; }
+    .about-copy { width: 100%; }
+    .about-photo { width: 130px; }
+
+    /* Scroll sections: full-width, centered, no fixed max-widths */
+    #scroll-container { height: 300vh; }
+    .scroll-section { padding: 6rem 6vw; min-height: 100vh; justify-content: center !important; }
+    .align-left, .align-right, #skills.scroll-section { padding-left: 6vw; padding-right: 6vw; }
     .section-inner, .skills-card { max-width: 100%; width: 100%; }
-    .projects-grid, .skills-cols { grid-template-columns: 1fr; }
+    .glass-card { padding: 1.6rem 1.5rem; backdrop-filter: blur(26px) saturate(150%) brightness(.82); -webkit-backdrop-filter: blur(26px) saturate(150%) brightness(.82); }
+    .section-heading { font-size: clamp(1.8rem, 8vw, 2.6rem); }
+
+    .projects-grid, .skills-cols { grid-template-columns: 1fr; gap: 1.1rem; width: 100%; }
+    .projects-head { margin-bottom: 1.4rem; }
+
+    /* Kill any horizontal overflow from wide text blocks */
+    .about-body, .section-body { max-width: 100%; }
+    .about-meta { gap: 1.2rem 1.6rem; }
+    .marquee-text { font-size: 26vw; }
 }
+
+@media (max-width: 420px) {
+    .site-header nav a { font-size: .58rem; letter-spacing: .03em; }
+    .intro-heading { font-size: clamp(3rem, 19vw, 4.6rem); }
+    .about-meta { gap: 1rem 1.3rem; }
+}
+
 @media (prefers-reduced-motion: reduce) { .scroll-indicator svg, .site-header { animation: none; } .site-header { transform: none; } }

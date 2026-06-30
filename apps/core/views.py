@@ -27,6 +27,8 @@ SKILL_GROUPS = [
 #   -c:v libwebp -quality 80 static/frames/frame_%04d.webp
 # then set this to the resulting `ls static/frames | wc -l`.
 FRAME_COUNT = 200
+# Lighter set for phones (static/frames-m/) — saves data + memory on mobile.
+FRAME_COUNT_MOBILE = 120
 
 
 class HomeView(TemplateView):
@@ -38,4 +40,5 @@ class HomeView(TemplateView):
         ctx['skills'] = SKILLS
         ctx['skill_groups'] = SKILL_GROUPS
         ctx['frame_count'] = FRAME_COUNT
+        ctx['frame_count_mobile'] = FRAME_COUNT_MOBILE
         return ctx

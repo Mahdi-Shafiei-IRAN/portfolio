@@ -7,8 +7,11 @@
   "use strict";
 
   const body = document.body;
-  const FRAMES_BASE = body.dataset.framesBase;
-  const FRAME_COUNT = parseInt(body.dataset.frameCount, 10) || 0;
+  // Use the lighter frame set on phones (smaller download + less memory).
+  const useMobile = window.matchMedia("(max-width: 768px), (hover: none)").matches
+    && body.dataset.framesBaseM && parseInt(body.dataset.frameCountM, 10) > 0;
+  const FRAMES_BASE = useMobile ? body.dataset.framesBaseM : body.dataset.framesBase;
+  const FRAME_COUNT = parseInt(useMobile ? body.dataset.frameCountM : body.dataset.frameCount, 10) || 0;
   const FRAME_SPEED = 1.0; // video spans the full scroll (background, not a product shot)
 
   const canvas = document.getElementById("canvas");
