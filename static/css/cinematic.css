@@ -1,0 +1,243 @@
+/* ============================================================
+   Mahdi — Cinematic Portfolio
+   Dark theme · classic metallic gold · glassmorphism · 3D
+   ============================================================ */
+
+:root {
+    --bg:           #07070a;
+    --bg-soft:      #0d0d12;
+    --text:         #f4f1ea;
+    --text-dim:     #9a958a;
+
+    /* Classic metallic gold */
+    --gold:         #d4af37;
+    --gold-bright:  #f3d27a;
+    --gold-deep:    #a8842a;
+    --gold-grad:    linear-gradient(135deg, #f3d27a 0%, #d4af37 45%, #a8842a 100%);
+
+    --glass-bg:     rgba(22, 20, 14, 0.28);
+    --glass-brd:    rgba(212, 175, 55, 0.28);
+    --glass-hi:     rgba(255, 255, 255, 0.10);
+
+    --font-display: 'Sora', sans-serif;
+    --font-body:    'Inter', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scrollbar-width: none; }
+html::-webkit-scrollbar { display: none; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+/* ---------- Loader ---------- */
+#loader {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 1.4rem;
+    transition: opacity .8s ease, visibility .8s ease;
+}
+#loader.done { opacity: 0; visibility: hidden; }
+.loader-brand {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: clamp(2rem, 6vw, 3.4rem); letter-spacing: .35em;
+    background: var(--gold-grad); -webkit-background-clip: text;
+    background-clip: text; color: transparent; padding-left: .35em;
+}
+#loader-track { width: min(280px, 60vw); height: 2px; background: rgba(212,175,55,.15); overflow: hidden; }
+#loader-bar { width: 0%; height: 100%; background: var(--gold-grad); }
+#loader-percent { font-size: .75rem; letter-spacing: .25em; color: var(--text-dim); }
+
+/* ---------- Header ---------- */
+.site-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.6rem clamp(1.2rem, 5vw, 4rem);
+    mix-blend-mode: difference;
+}
+.logo {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 1.3rem; letter-spacing: .04em; color: #fff; text-decoration: none;
+}
+.logo span { color: var(--gold); }
+.site-header nav { display: flex; gap: 2rem; }
+.site-header nav a {
+    color: #fff; text-decoration: none; font-size: .82rem;
+    letter-spacing: .12em; text-transform: uppercase; opacity: .8;
+    transition: opacity .25s;
+}
+.site-header nav a:hover { opacity: 1; }
+
+/* ---------- Hero (standalone) ---------- */
+.hero-standalone {
+    position: relative; z-index: 40;
+    height: 100vh; width: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    background:
+        radial-gradient(120% 90% at 50% 0%, rgba(212,175,55,.10), transparent 60%),
+        var(--bg);
+}
+.hero-inner { padding: 0 1.5rem; }
+.section-label {
+    display: inline-block;
+    font-size: .8rem; letter-spacing: .3em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 1.4rem;
+}
+.hero-heading {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: clamp(5rem, 18vw, 16rem); line-height: .9;
+    letter-spacing: -.02em;
+    background: var(--gold-grad);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 0 80px rgba(212,175,55,.18);
+}
+.hero-tagline {
+    margin-top: 1.8rem; font-size: clamp(1rem, 2vw, 1.35rem);
+    color: var(--text-dim); max-width: 38ch; margin-left: auto; margin-right: auto;
+}
+.scroll-indicator {
+    position: absolute; bottom: 2.4rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    color: var(--text-dim); font-size: .7rem; letter-spacing: .22em; text-transform: uppercase;
+}
+.scroll-indicator svg { width: 20px; height: 20px; color: var(--gold); animation: bob 1.8s ease-in-out infinite; }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
+/* ---------- Canvas (full-viewport scroll video) ---------- */
+.canvas-wrap {
+    position: fixed; inset: 0; z-index: 10;
+    clip-path: circle(0% at 50% 50%);
+    will-change: clip-path;
+}
+#canvas { width: 100%; height: 100%; display: block; }
+.canvas-grain {
+    position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image: radial-gradient(circle at 50% 50%, transparent 60%, rgba(0,0,0,.55) 100%);
+}
+
+/* ---------- Dark overlay ---------- */
+#dark-overlay {
+    position: fixed; inset: 0; z-index: 15;
+    background: #050507; opacity: 0; pointer-events: none;
+}
+
+/* ---------- Marquee ---------- */
+.marquee-wrap {
+    position: fixed; top: 50%; left: 0; z-index: 20;
+    width: 100%; transform: translateY(-50%);
+    pointer-events: none; opacity: 0; overflow: hidden;
+    mix-blend-mode: overlay;
+}
+.marquee-text {
+    white-space: nowrap; font-family: var(--font-display); font-weight: 800;
+    font-size: 13vw; letter-spacing: .02em;
+    color: rgba(212,175,55,.16); will-change: transform;
+}
+
+/* ---------- Scroll container & sections ---------- */
+#scroll-container { position: relative; z-index: 30; height: 820vh; }
+
+.scroll-section {
+    position: absolute; left: 0; width: 100%;
+    display: flex; align-items: center;
+    min-height: 100vh; padding: 0 5vw;
+    will-change: transform, opacity;
+    perspective: 1200px;
+}
+.align-left  { justify-content: flex-start; padding-right: 50vw; }
+.align-right { justify-content: flex-end;  padding-left: 50vw; }
+.section-inner { max-width: 44vw; }
+
+/* ---------- Glassmorphism + 3D card ---------- */
+.glass-card {
+    position: relative;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-brd);
+    border-radius: 22px;
+    padding: 2.6rem 2.8rem;
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    box-shadow:
+        0 24px 60px rgba(0,0,0,.55),
+        inset 0 1px 0 var(--glass-hi),
+        inset 0 0 40px rgba(212,175,55,.05);
+    transform-style: preserve-3d;
+}
+.glass-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit;
+    padding: 1px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(243,210,122,.55), transparent 40%, transparent 60%, rgba(168,132,42,.35));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: .8;
+}
+.tilt { transition: transform .25s ease; }
+
+.section-label { color: var(--gold); }
+.section-heading {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(2.2rem, 5vw, 4.2rem); line-height: 1.02;
+    letter-spacing: -.015em; margin: .4rem 0 1.2rem;
+    transform: translateZ(40px);
+}
+.section-heading-stack { font-size: clamp(1.6rem, 3.4vw, 3rem); color: var(--gold-bright); }
+.section-body {
+    font-size: clamp(1rem, 1.4vw, 1.2rem); line-height: 1.7;
+    color: var(--text-dim); max-width: 42ch; transform: translateZ(20px);
+}
+
+/* ---------- Stats ---------- */
+.section-stats { justify-content: center; }
+.stats-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1.6rem; width: min(960px, 90vw);
+}
+.stat { text-align: center; padding: 2.4rem 1.4rem; }
+.stat-number {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: clamp(3rem, 6vw, 5.4rem); line-height: 1;
+    background: var(--gold-grad); -webkit-background-clip: text;
+    background-clip: text; color: transparent;
+}
+.stat-suffix { font-family: var(--font-display); font-weight: 700; font-size: 2rem; color: var(--gold); }
+.stat-label { display: block; margin-top: .9rem; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-dim); }
+
+/* ---------- CTA ---------- */
+.cta-button {
+    display: inline-block; margin-top: 1.8rem;
+    padding: 1rem 2.4rem; border-radius: 999px;
+    background: var(--gold-grad); color: #1a1407;
+    font-weight: 600; text-decoration: none; letter-spacing: .02em;
+    box-shadow: 0 10px 30px rgba(212,175,55,.3);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.cta-button:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(212,175,55,.42); }
+.cta-socials { margin-top: 1.6rem; display: flex; gap: 1.6rem; }
+.cta-socials a { color: var(--text-dim); text-decoration: none; font-size: .82rem; letter-spacing: .12em; text-transform: uppercase; transition: color .2s; }
+.cta-socials a:hover { color: var(--gold); }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 768px) {
+    .site-header nav { gap: 1.1rem; }
+    .site-header nav a { font-size: .7rem; }
+    #scroll-container { height: 600vh; }
+    .scroll-section { padding: 0 6vw; justify-content: center !important; }
+    .align-left, .align-right { padding-left: 6vw; padding-right: 6vw; }
+    .section-inner { max-width: 100%; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .marquee-text { font-size: 22vw; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scroll-indicator svg { animation: none; }
+}
