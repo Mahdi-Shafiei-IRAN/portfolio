@@ -5,6 +5,11 @@ __pycache__/
 .venv/
 venv/
 env/
+.superpowers/
+*claude/
+.pytest_cache/
+docs/
+
 
 # Django
 *.log
@@ -30,3 +35,7 @@ Thumbs.db
 
 # Claude / project tooling
 graphify-out/
+
+
+
+exampleinstaller/
