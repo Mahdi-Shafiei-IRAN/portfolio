@@ -159,6 +159,19 @@
     initDarkOverlay();
     init3DTilt(reduce);
 
+    /* About block reveal (it lives in normal flow, above the scroll video) */
+    const aboutReveals = gsap.utils.toArray(".about-block .reveal");
+    if (aboutReveals.length) {
+      if (reduce) {
+        gsap.set(aboutReveals, { opacity: 1, y: 0 });
+      } else {
+        gsap.to(aboutReveals, {
+          opacity: 1, y: 0, stagger: 0.1, duration: 0.9, ease: "power3.out",
+          scrollTrigger: { trigger: ".about-block", start: "top 72%" },
+        });
+      }
+    }
+
     ScrollTrigger.refresh();
   }
 
@@ -167,7 +180,8 @@
     const type = section.dataset.animation;
     const persist = section.dataset.persist === "true";
     const children = section.querySelectorAll(
-      ".section-label, .section-heading, .section-body, .cta-button, .cta-socials, .stat"
+      ".section-inner > .section-label, .section-inner > .section-heading, .section-body," +
+      " .cta-button, .cta-socials, .stat, .projects-head, .project-card, .skills-head, .skill-group"
     );
     if (reduce) { gsap.set(children, { opacity: 1, x: 0, y: 0, scale: 1, clipPath: "none" }); return; }
 

@@ -1,4 +1,4 @@
-{% load static %}
+{% load static portfolio_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,6 +26,7 @@
         <a href="#hero" class="logo">Mahdi<span>.</span></a>
         <nav>
             <a href="#about">About</a>
+            <a href="#projects">Projects</a>
             <a href="#skills">Skills</a>
             <a href="#contact">Contact</a>
         </nav>
@@ -44,13 +45,41 @@
         </div>
     </section>
 
+    <!-- 3b. About — solid section at the top, photo beside bio -->
+    <section class="about-block" id="about">
+        <div class="about-grid">
+            <figure class="about-photo reveal">
+                <!-- Drop your photo at static/img/profile.jpg to replace the placeholder -->
+                <img src="{% static 'img/profile.jpg' %}" alt="Mahdi"
+                     onerror="this.style.display='none';this.parentNode.classList.add('no-photo');">
+                <figcaption>Your photo →<br>static/img/profile.jpg</figcaption>
+            </figure>
+            <div class="about-copy">
+                <span class="section-label reveal">About me</span>
+                <h2 class="about-heading reveal">Backend developer who ships maintainable systems.</h2>
+                <p class="about-body reveal">I'm a Django developer focused on clean architecture, solid database
+                    design, and REST APIs. I own the full backend lifecycle — data modeling, business logic,
+                    Docker, Nginx, CI — and care about code that's easy to reason about and extend.</p>
+                <div class="about-meta reveal">
+                    <div><span class="about-meta-k">Focus</span><span class="about-meta-v">Backend · APIs</span></div>
+                    <div><span class="about-meta-k">Stack</span><span class="about-meta-v">Python · Django</span></div>
+                    <div><span class="about-meta-k">Open to</span><span class="about-meta-v">Roles · Freelance</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator about-scroll" aria-hidden="true">
+            <span>Keep scrolling — the story plays as you go</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </div>
+    </section>
+
     <!-- 4. Canvas: full-viewport scroll-driven video background -->
     <div class="canvas-wrap">
         <canvas id="canvas"></canvas>
         <div class="canvas-grain" aria-hidden="true"></div>
     </div>
 
-    <!-- 5. Dark overlay (stats legibility) -->
+    <!-- 5. Dark overlay -->
     <div id="dark-overlay" aria-hidden="true"></div>
 
     <!-- 6. Marquee -->
@@ -58,58 +87,66 @@
         <div class="marquee-text">PYTHON · DJANGO · POSTGRESQL · DOCKER · REST · LINUX · PYTHON · DJANGO · POSTGRESQL · DOCKER · REST · LINUX ·</div>
     </div>
 
-    <!-- 7. Scroll container -->
+    <!-- 7. Scroll container (the cinematic, scroll-scrubbed part) -->
     <main id="scroll-container">
 
-        <section class="scroll-section section-content align-left"
-                 data-enter="20" data-leave="34" data-animation="slide-left">
-            <div class="glass-card section-inner tilt">
-                <span class="section-label">001 / About</span>
-                <h2 class="section-heading">Backend, done right.</h2>
-                <p class="section-body">I'm a Django developer focused on clean architecture, solid database design, and systems that are easy to reason about and extend — from REST APIs to containerized deployments.</p>
+        <!-- Projects (dynamic, from Django admin) -->
+        <section class="scroll-section section-projects" id="projects"
+                 data-enter="14" data-leave="44" data-animation="stagger-up">
+            <div class="projects-head">
+                <span class="section-label">001 / Selected Work</span>
+                <h2 class="section-heading">Projects</h2>
+            </div>
+            <div class="projects-grid">
+                {% for project in projects %}
+                <article class="glass-card project-card">
+                    {% if project.image %}
+                    <div class="project-thumb" style="background-image:url('{{ project.image.url }}')"></div>
+                    {% endif %}
+                    <h3 class="project-title">{{ project.title }}</h3>
+                    <p class="project-desc">{{ project.description|truncatechars:120 }}</p>
+                    <div class="project-tags">
+                        {% for tech in project.tech_stack|split %}<span>{{ tech }}</span>{% endfor %}
+                    </div>
+                    <div class="project-links">
+                        {% if project.github_url %}<a href="{{ project.github_url }}" target="_blank" rel="noopener">GitHub ↗</a>{% endif %}
+                        {% if project.live_url %}<a href="{{ project.live_url }}" target="_blank" rel="noopener">Live ↗</a>{% endif %}
+                    </div>
+                </article>
+                {% empty %}
+                <article class="glass-card project-card project-empty">
+                    <h3 class="project-title">No projects yet</h3>
+                    <p class="project-desc">Add your work in the
+                        <a href="/admin/projects/project/add/">admin panel</a> and it appears here.</p>
+                </article>
+                {% endfor %}
             </div>
         </section>
 
-        <section class="scroll-section section-content align-right" id="about"
-                 data-enter="36" data-leave="50" data-animation="slide-right">
-            <div class="glass-card section-inner tilt">
-                <span class="section-label">002 / Approach</span>
-                <h2 class="section-heading">From model to production.</h2>
-                <p class="section-body">Data modeling, business logic, REST endpoints, Docker, Nginx, CI — I own the full backend lifecycle and ship maintainable code that scales.</p>
+        <!-- Skills (grouped, real content) -->
+        <section class="scroll-section section-skills" id="skills"
+                 data-enter="48" data-leave="74" data-animation="fade-up">
+            <div class="skills-head">
+                <span class="section-label">002 / Capabilities</span>
+                <h2 class="section-heading">Skills</h2>
             </div>
-        </section>
-
-        <section class="scroll-section section-stats" id="skills"
-                 data-enter="52" data-leave="68" data-animation="stagger-up">
-            <div class="stats-grid">
-                <div class="stat glass-card">
-                    <span class="stat-number" data-value="9" data-decimals="0">0</span>
-                    <span class="stat-label">Core technologies</span>
+            <div class="skills-grid">
+                {% for group in skill_groups %}
+                <div class="glass-card skill-group">
+                    <h3 class="skill-group-name">{{ group.name }}</h3>
+                    <ul class="skill-list">
+                        {% for item in group.items %}<li>{{ item }}</li>{% endfor %}
+                    </ul>
                 </div>
-                <div class="stat glass-card">
-                    <span class="stat-number" data-value="100" data-decimals="0">0</span><span class="stat-suffix">%</span>
-                    <span class="stat-label">Backend focus</span>
-                </div>
-                <div class="stat glass-card">
-                    <span class="stat-number" data-value="24" data-decimals="0">0</span><span class="stat-suffix">/7</span>
-                    <span class="stat-label">Uptime mindset</span>
-                </div>
+                {% endfor %}
             </div>
         </section>
 
-        <section class="scroll-section section-content align-left"
-                 data-enter="70" data-leave="84" data-animation="clip-reveal">
-            <div class="glass-card section-inner tilt">
-                <span class="section-label">003 / Stack</span>
-                <h2 class="section-heading section-heading-stack">{% for s in skills %}{{ s }}{% if not forloop.last %} · {% endif %}{% endfor %}</h2>
-                <p class="section-body">The tools I reach for, every day.</p>
-            </div>
-        </section>
-
+        <!-- Contact (persists) -->
         <section class="scroll-section section-content section-cta align-right" id="contact"
-                 data-enter="86" data-leave="100" data-animation="scale-up" data-persist="true">
+                 data-enter="78" data-leave="100" data-animation="scale-up" data-persist="true">
             <div class="glass-card section-inner tilt">
-                <span class="section-label">004 / Contact</span>
+                <span class="section-label">003 / Contact</span>
                 <h2 class="section-heading">Let's build something.</h2>
                 <p class="section-body">Open to backend roles, freelance projects, and interesting collaborations.</p>
                 <a class="cta-button" href="mailto:your@email.com">Get in touch</a>

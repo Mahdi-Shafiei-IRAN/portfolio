@@ -15,8 +15,8 @@
     --gold-deep:    #a8842a;
     --gold-grad:    linear-gradient(135deg, #f3d27a 0%, #d4af37 45%, #a8842a 100%);
 
-    --glass-bg:     rgba(22, 20, 14, 0.28);
-    --glass-brd:    rgba(212, 175, 55, 0.28);
+    --glass-bg:     rgba(12, 11, 8, 0.55);
+    --glass-brd:    rgba(212, 175, 55, 0.30);
     --glass-hi:     rgba(255, 255, 255, 0.10);
 
     --font-display: 'Sora', sans-serif;
@@ -165,13 +165,20 @@ body {
     border: 1px solid var(--glass-brd);
     border-radius: 22px;
     padding: 2.6rem 2.8rem;
-    backdrop-filter: blur(18px) saturate(140%);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(34px) saturate(150%) brightness(.78);
+    -webkit-backdrop-filter: blur(34px) saturate(150%) brightness(.78);
     box-shadow:
-        0 24px 60px rgba(0,0,0,.55),
+        0 28px 70px rgba(0,0,0,.6),
         inset 0 1px 0 var(--glass-hi),
-        inset 0 0 40px rgba(212,175,55,.05);
+        inset 0 0 60px rgba(0,0,0,.35);
     transform-style: preserve-3d;
+}
+/* Extra dark veil inside the card so text never gets lost over a busy video */
+.glass-card > * { position: relative; z-index: 1; }
+.glass-card::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 0;
+    background: linear-gradient(180deg, rgba(6,5,3,.30), rgba(6,5,3,.55));
+    pointer-events: none;
 }
 .glass-card::before {
     content: ""; position: absolute; inset: 0; border-radius: inherit;
@@ -226,8 +233,83 @@ body {
 .cta-socials a { color: var(--text-dim); text-decoration: none; font-size: .82rem; letter-spacing: .12em; text-transform: uppercase; transition: color .2s; }
 .cta-socials a:hover { color: var(--gold); }
 
+/* ---------- About (solid section at top, photo + bio) ---------- */
+.about-block {
+    position: relative; z-index: 40;
+    min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+    padding: 8rem clamp(1.5rem, 8vw, 7rem) 6rem;
+    background:
+        radial-gradient(90% 70% at 85% 20%, rgba(212,175,55,.08), transparent 60%),
+        var(--bg);
+}
+.about-grid {
+    display: grid; grid-template-columns: minmax(260px, 380px) 1fr;
+    gap: clamp(2rem, 5vw, 5rem); align-items: center;
+    max-width: 1200px; margin: 0 auto; width: 100%;
+}
+.about-photo {
+    position: relative; aspect-ratio: 4 / 5; border-radius: 24px; overflow: hidden;
+    border: 1px solid var(--glass-brd);
+    background: linear-gradient(160deg, #15130d, #0a0a0c);
+    box-shadow: 0 30px 70px rgba(0,0,0,.55), inset 0 0 60px rgba(212,175,55,.06);
+}
+.about-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.about-photo figcaption {
+    display: none; position: absolute; inset: 0;
+    align-items: center; justify-content: center; text-align: center;
+    color: var(--text-dim); font-size: .8rem; letter-spacing: .12em; line-height: 1.8;
+    text-transform: uppercase;
+}
+.about-photo.no-photo { display: flex; }
+.about-photo.no-photo figcaption { display: flex; }
+.about-photo.no-photo::after {
+    content: ""; position: absolute; width: 90px; height: 90px; border-radius: 50%;
+    border: 2px solid var(--gold); opacity: .35; top: 32%;
+}
+.about-heading {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.8rem, 3.6vw, 3.2rem); line-height: 1.08;
+    letter-spacing: -.015em; margin: .6rem 0 1.2rem; color: var(--text);
+}
+.about-body { font-size: clamp(1rem, 1.4vw, 1.18rem); line-height: 1.75; color: var(--text-dim); max-width: 54ch; }
+.about-meta { display: flex; flex-wrap: wrap; gap: 2.2rem; margin-top: 2rem; }
+.about-meta-k { display: block; font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); margin-bottom: .35rem; }
+.about-meta-v { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; color: var(--text); }
+.about-scroll { position: static; transform: none; margin: 3.5rem auto 0; }
+.reveal { opacity: 0; transform: translateY(28px); }
+
+/* ---------- Projects (grid of glass cards over video) ---------- */
+.section-projects, .section-skills { flex-direction: column; justify-content: center; padding: 0 5vw; }
+.projects-head, .skills-head { text-align: center; margin-bottom: 2.4rem; }
+.projects-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1.6rem; width: min(1100px, 92vw); margin: 0 auto;
+}
+.project-card { padding: 1.8rem 1.8rem 1.6rem; display: flex; flex-direction: column; }
+.project-thumb { height: 130px; border-radius: 12px; background-size: cover; background-position: center; margin-bottom: 1.1rem; border: 1px solid rgba(212,175,55,.18); }
+.project-title { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--text); margin-bottom: .5rem; }
+.project-desc { font-size: .92rem; line-height: 1.6; color: var(--text-dim); flex: 1; margin-bottom: 1rem; }
+.project-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
+.project-tags span { font-size: .68rem; letter-spacing: .04em; color: var(--gold-bright); background: rgba(212,175,55,.12); border: 1px solid rgba(212,175,55,.22); padding: .25rem .6rem; border-radius: 999px; }
+.project-links { display: flex; gap: 1.2rem; }
+.project-links a { color: var(--text-dim); text-decoration: none; font-size: .8rem; letter-spacing: .06em; transition: color .2s; }
+.project-links a:hover { color: var(--gold); }
+.project-empty { grid-column: 1 / -1; text-align: center; }
+.project-empty a { color: var(--gold); }
+
+/* ---------- Skills (grouped glass cards) ---------- */
+.skills-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6rem; width: min(1100px, 92vw); margin: 0 auto; }
+.skill-group { padding: 2rem 2rem 1.8rem; }
+.skill-group-name { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; color: var(--gold); letter-spacing: .02em; margin-bottom: 1.2rem; padding-bottom: .8rem; border-bottom: 1px solid rgba(212,175,55,.18); }
+.skill-list { list-style: none; display: flex; flex-direction: column; gap: .7rem; }
+.skill-list li { position: relative; padding-left: 1.3rem; font-size: 1rem; color: var(--text); }
+.skill-list li::before { content: "▸"; position: absolute; left: 0; color: var(--gold); font-size: .8rem; top: .15rem; }
+
 /* ---------- Mobile ---------- */
 @media (max-width: 768px) {
+    .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .about-photo { max-width: 260px; margin: 0 auto; }
+    .projects-grid, .skills-grid { grid-template-columns: 1fr; }
     .site-header nav { gap: 1.1rem; }
     .site-header nav a { font-size: .7rem; }
     #scroll-container { height: 600vh; }
