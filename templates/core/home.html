@@ -14,6 +14,10 @@
 </head>
 <body data-frames-base="{% static 'frames/' %}" data-frame-count="{{ frame_count }}">
 
+    <!-- Custom glass-ball cursor (orb + precise dot; trail dots added by JS) -->
+    <div class="cursor-orb" aria-hidden="true"></div>
+    <div class="cursor-dot" aria-hidden="true"></div>
+
     <!-- 1. Loader -->
     <div id="loader">
         <div class="loader-brand">MAHDI</div>

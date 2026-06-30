@@ -26,7 +26,7 @@ SKILL_GROUPS = [
 # Regenerate frames with: ffmpeg -i static/video/hero.mp4 -vf "fps=<F>,scale=768:-1" \
 #   -c:v libwebp -quality 80 static/frames/frame_%04d.webp
 # then set this to the resulting `ls static/frames | wc -l`.
-FRAME_COUNT = 240
+FRAME_COUNT = 200
 
 
 class HomeView(TemplateView):

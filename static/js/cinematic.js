@@ -278,7 +278,59 @@
     });
   }
 
+  /* ---------- Glass-ball cursor (small, very smooth, with trail) ---------- */
+  function initCursor() {
+    if (window.matchMedia("(hover: none)").matches) return;
+    const orb = document.querySelector(".cursor-orb");
+    const dot = document.querySelector(".cursor-dot");
+    if (!orb || !dot) return;
+
+    const TRAIL = 6;
+    const trails = [];
+    for (let i = 0; i < TRAIL; i++) {
+      const t = document.createElement("div");
+      t.className = "cursor-trail";
+      document.body.appendChild(t);
+      trails.push({ el: t, x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    }
+
+    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    let ox = mx, oy = my;
+    window.addEventListener("mousemove", (e) => { mx = e.clientX; my = e.clientY; }, { passive: true });
+
+    // Grow the orb over interactive / glassy elements
+    const interactive = "a, button, .glass-card, .cta-button, .project-card, input, textarea";
+    document.addEventListener("mouseover", (e) => {
+      if (e.target.closest(interactive)) orb.classList.add("active");
+    });
+    document.addEventListener("mouseout", (e) => {
+      if (e.target.closest(interactive) && !e.relatedTarget?.closest?.(interactive)) orb.classList.remove("active");
+    });
+
+    const place = (el, x, y) => { el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`; };
+    function loop() {
+      ox += (mx - ox) * 0.18;
+      oy += (my - oy) * 0.18;
+      place(orb, ox, oy);
+      place(dot, mx, my);              // precise center, no lag
+      let px = ox, py = oy;
+      trails.forEach((t, i) => {
+        t.x += (px - t.x) * 0.32;
+        t.y += (py - t.y) * 0.32;
+        const f = 1 - i / TRAIL;
+        const s = 9 * f;
+        t.el.style.width = t.el.style.height = s + "px";
+        t.el.style.opacity = 0.5 * f;
+        place(t.el, t.x, t.y);
+        px = t.x; py = t.y;
+      });
+      requestAnimationFrame(loop);
+    }
+    loop();
+  }
+
   /* ---------- Boot ---------- */
+  initCursor();
   initCounters();
   preload();
 })();
