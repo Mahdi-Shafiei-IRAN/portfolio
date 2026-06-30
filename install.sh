@@ -6,7 +6,7 @@
 #  Usage (from a cloned repo):
 #    sudo bash install.sh
 #  Or one-liner (replace with your repo URL):
-#    sudo bash <(curl -Ls https://raw.githubusercontent.com/yourusername/portfolio/main/install.sh)
+#    sudo bash <(curl -Ls https://raw.githubusercontent.com/Mahdi-Shafiei-IRAN/portfolio/main/install.sh)
 # ============================================================
 set -o pipefail
 
@@ -24,7 +24,7 @@ step()    { echo -e "\n${BOLD}${CYAN}━━━ $1 ━━━${NC}"; }
 
 # ---- Config ----
 INSTALL_DIR="/opt/portfolio"
-REPO_URL="https://github.com/yourusername/portfolio.git"   # <-- change to your repo
+REPO_URL="https://github.com/Mahdi-Shafiei-IRAN/portfolio.git"   # <-- change to your repo
 COMPOSE_FILE="docker-compose.prod.yml"
 
 clear

@@ -16,7 +16,7 @@ a `portfolio` management CLI.
 **From a clone of this repo on the server:**
 
 ```bash
-git clone https://github.com/yourusername/portfolio.git
+git clone https://github.com/Mahdi-Shafiei-IRAN/portfolio.git
 cd portfolio
 sudo bash install.sh
 ```
@@ -24,7 +24,7 @@ sudo bash install.sh
 **Or one-line (edit the URL to your repo):**
 
 ```bash
-sudo bash <(curl -Ls https://raw.githubusercontent.com/yourusername/portfolio/main/install.sh)
+sudo bash <(curl -Ls https://raw.githubusercontent.com/Mahdi-Shafiei-IRAN/portfolio/main/install.sh)
 ```
 
 The installer asks for:
