@@ -1,0 +1,12 @@
+# Convenience entry point — installs the PRODUCTION dependency set.
+#
+# The source of truth is the requirements/ folder:
+#   requirements/base.txt  — shared (Django, Pillow, WhiteNoise, decouple)
+#   requirements/dev.txt   — base + pytest (local development)
+#   requirements/prod.txt  — base + gunicorn, psycopg2, dj-database-url
+#
+# The Docker image (Dockerfile) installs requirements/prod.txt directly, so for
+# the server deploy you don't need to touch this. For a quick manual install:
+#   pip install -r requirements.txt          # production set
+#   pip install -r requirements/dev.txt      # local development set
+-r requirements/prod.txt
