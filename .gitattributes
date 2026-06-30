@@ -1,0 +1,5 @@
+# Shell scripts must use LF endings or they fail on Linux (/bin/bash^M).
+*.sh text eol=lf
+# Dockerfile and entrypoints likewise run on Linux.
+Dockerfile text eol=lf
+*.conf text eol=lf
