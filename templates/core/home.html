@@ -21,33 +21,33 @@
         <div id="loader-percent">0%</div>
     </div>
 
-    <!-- 2. Fixed header -->
+    <!-- 2. Canvas: full-viewport scroll-driven video background (visible from the start) -->
+    <div class="canvas-wrap">
+        <canvas id="canvas"></canvas>
+    </div>
+    <div class="bg-veil" aria-hidden="true"></div>
+
+    <!-- 3. Glassy fixed header -->
     <header class="site-header">
-        <a href="#hero" class="logo">Mahdi<span>.</span></a>
-        <nav>
-            <a href="#about">About</a>
-            <a href="#projects">Projects</a>
-            <a href="#skills">Skills</a>
-            <a href="#contact">Contact</a>
-        </nav>
+        <div class="header-glass">
+            <a href="#hero" class="logo">Mahdi<span>.</span></a>
+            <nav>
+                <a href="#hero">About</a>
+                <a href="#projects">Projects</a>
+                <a href="#skills">Skills</a>
+                <a href="#contact">Contact</a>
+            </nav>
+        </div>
     </header>
 
-    <!-- 3. Hero (standalone 100vh) -->
-    <section class="hero-standalone" id="hero">
-        <div class="hero-inner">
+    <!-- 4. Intro: name (smaller) upper-right, About + photo lower-left -->
+    <section class="intro" id="hero">
+        <div class="intro-name">
             <span class="section-label">Backend Developer · Python &amp; Django</span>
-            <h1 class="hero-heading"><span>Mahdi</span></h1>
-            <p class="hero-tagline">I build reliable, scalable web systems — from data models to production.</p>
+            <h1 class="intro-heading"><span>Mahdi</span></h1>
         </div>
-        <div class="scroll-indicator" aria-hidden="true">
-            <span>Scroll</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M19 12l-7 7-7-7"/></svg>
-        </div>
-    </section>
 
-    <!-- 3b. About — solid section at the top, photo beside bio -->
-    <section class="about-block" id="about">
-        <div class="about-grid">
+        <div class="intro-about" id="about">
             <figure class="about-photo reveal">
                 <!-- Drop your photo at static/img/profile.jpg to replace the placeholder -->
                 <img src="{% static 'img/profile.jpg' %}" alt="Mahdi"
@@ -58,8 +58,7 @@
                 <span class="section-label reveal">About me</span>
                 <h2 class="about-heading reveal">Backend developer who ships maintainable systems.</h2>
                 <p class="about-body reveal">I'm a Django developer focused on clean architecture, solid database
-                    design, and REST APIs. I own the full backend lifecycle — data modeling, business logic,
-                    Docker, Nginx, CI — and care about code that's easy to reason about and extend.</p>
+                    design, and REST APIs — I own the full backend lifecycle, from data modeling to Docker &amp; Nginx.</p>
                 <div class="about-meta reveal">
                     <div><span class="about-meta-k">Focus</span><span class="about-meta-v">Backend · APIs</span></div>
                     <div><span class="about-meta-k">Stack</span><span class="about-meta-v">Python · Django</span></div>
@@ -67,19 +66,14 @@
                 </div>
             </div>
         </div>
-        <div class="scroll-indicator about-scroll" aria-hidden="true">
-            <span>Keep scrolling — the story plays as you go</span>
+
+        <div class="scroll-indicator" aria-hidden="true">
+            <span>Scroll — the video plays as you go</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M19 12l-7 7-7-7"/></svg>
         </div>
     </section>
 
-    <!-- 4. Canvas: full-viewport scroll-driven video background -->
-    <div class="canvas-wrap">
-        <canvas id="canvas"></canvas>
-        <div class="canvas-grain" aria-hidden="true"></div>
-    </div>
-
-    <!-- 5. Dark overlay -->
+    <!-- 5. Dark overlay (legibility for the dense sections) -->
     <div id="dark-overlay" aria-hidden="true"></div>
 
     <!-- 6. Marquee -->
@@ -87,12 +81,12 @@
         <div class="marquee-text">PYTHON · DJANGO · POSTGRESQL · DOCKER · REST · LINUX · PYTHON · DJANGO · POSTGRESQL · DOCKER · REST · LINUX ·</div>
     </div>
 
-    <!-- 7. Scroll container (the cinematic, scroll-scrubbed part) -->
+    <!-- 7. Scroll container (cinematic, scroll-scrubbed — kept tight for density) -->
     <main id="scroll-container">
 
-        <!-- Projects (dynamic, from Django admin) -->
+        <!-- Projects (dynamic, separate cards) -->
         <section class="scroll-section section-projects" id="projects"
-                 data-enter="14" data-leave="44" data-animation="stagger-up">
+                 data-enter="6" data-leave="40" data-animation="stagger-up">
             <div class="projects-head">
                 <span class="section-label">001 / Selected Work</span>
                 <h2 class="section-heading">Projects</h2>
@@ -123,28 +117,28 @@
             </div>
         </section>
 
-        <!-- Skills (grouped, real content) -->
-        <section class="scroll-section section-skills" id="skills"
-                 data-enter="48" data-leave="74" data-animation="fade-up">
-            <div class="skills-head">
+        <!-- Skills — a SINGLE card (like Contact) with grouped columns inside -->
+        <section class="scroll-section section-content align-left" id="skills"
+                 data-enter="46" data-leave="70" data-animation="slide-left">
+            <div class="glass-card skills-card tilt">
                 <span class="section-label">002 / Capabilities</span>
                 <h2 class="section-heading">Skills</h2>
-            </div>
-            <div class="skills-grid">
-                {% for group in skill_groups %}
-                <div class="glass-card skill-group">
-                    <h3 class="skill-group-name">{{ group.name }}</h3>
-                    <ul class="skill-list">
-                        {% for item in group.items %}<li>{{ item }}</li>{% endfor %}
-                    </ul>
+                <div class="skills-cols">
+                    {% for group in skill_groups %}
+                    <div class="skill-col">
+                        <h3 class="skill-group-name">{{ group.name }}</h3>
+                        <ul class="skill-list">
+                            {% for item in group.items %}<li>{{ item }}</li>{% endfor %}
+                        </ul>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </section>
 
         <!-- Contact (persists) -->
         <section class="scroll-section section-content section-cta align-right" id="contact"
-                 data-enter="78" data-leave="100" data-animation="scale-up" data-persist="true">
+                 data-enter="76" data-leave="100" data-animation="scale-up" data-persist="true">
             <div class="glass-card section-inner tilt">
                 <span class="section-label">003 / Contact</span>
                 <h2 class="section-heading">Let's build something.</h2>

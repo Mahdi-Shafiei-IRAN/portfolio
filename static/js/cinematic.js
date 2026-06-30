@@ -127,21 +127,6 @@
       },
     });
 
-    /* Circle-wipe hero reveal: canvas opens up as hero scrolls away */
-    ScrollTrigger.create({
-      trigger: scrollContainer,
-      start: "top top",
-      end: "bottom bottom",
-      scrub: true,
-      onUpdate: (self) => {
-        const p = self.progress;
-        heroSection.style.opacity = Math.max(0, 1 - p * 14);
-        const wipe = Math.min(1, Math.max(0, (p - 0.008) / 0.07));
-        const radius = wipe * 80; // 0 → 80% viewport
-        canvasWrap.style.clipPath = `circle(${radius}% at 50% 50%)`;
-      },
-    });
-
     /* Position + animate each scroll section */
     document.querySelectorAll(".scroll-section").forEach((section) => {
       const enter = parseFloat(section.dataset.enter) / 100;
@@ -159,17 +144,11 @@
     initDarkOverlay();
     init3DTilt(reduce);
 
-    /* About block reveal (it lives in normal flow, above the scroll video) */
-    const aboutReveals = gsap.utils.toArray(".about-block .reveal");
-    if (aboutReveals.length) {
-      if (reduce) {
-        gsap.set(aboutReveals, { opacity: 1, y: 0 });
-      } else {
-        gsap.to(aboutReveals, {
-          opacity: 1, y: 0, stagger: 0.1, duration: 0.9, ease: "power3.out",
-          scrollTrigger: { trigger: ".about-block", start: "top 72%" },
-        });
-      }
+    /* Intro reveals (name + about live in normal flow, over the video) */
+    const introReveals = gsap.utils.toArray(".intro .reveal");
+    if (introReveals.length) {
+      if (reduce) gsap.set(introReveals, { opacity: 1, y: 0 });
+      else gsap.to(introReveals, { opacity: 1, y: 0, stagger: 0.1, duration: 0.9, delay: 0.2, ease: "power3.out" });
     }
 
     ScrollTrigger.refresh();
@@ -181,7 +160,8 @@
     const persist = section.dataset.persist === "true";
     const children = section.querySelectorAll(
       ".section-inner > .section-label, .section-inner > .section-heading, .section-body," +
-      " .cta-button, .cta-socials, .stat, .projects-head, .project-card, .skills-head, .skill-group"
+      " .cta-button, .cta-socials, .projects-head, .project-card," +
+      " .skills-card > .section-label, .skills-card > .section-heading, .skill-col"
     );
     if (reduce) { gsap.set(children, { opacity: 1, x: 0, y: 0, scale: 1, clipPath: "none" }); return; }
 
