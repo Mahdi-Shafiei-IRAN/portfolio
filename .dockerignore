@@ -17,12 +17,11 @@ __pycache__/
 .git/
 .gitignore
 .superpowers/
+*claude/
 graphify-out/
 
 # Docs, plans, tooling
 docs/
-.claude/
-CLAUDE.md
 README.md
 .dockerignore
 Dockerfile

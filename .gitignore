@@ -5,8 +5,6 @@ __pycache__/
 .venv/
 venv/
 env/
-.superpowers/
-*claude/
 .pytest_cache/
 docs/
 
@@ -33,7 +31,9 @@ media/
 .DS_Store
 Thumbs.db
 
-# Claude / project tooling
+# Local tooling
+.superpowers/
+*claude/
 graphify-out/
 
 
