@@ -32,8 +32,6 @@ media/
 Thumbs.db
 
 # Local tooling
-.superpowers/
-*claude/
 graphify-out/
 
 

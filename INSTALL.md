@@ -39,15 +39,23 @@ The installer asks for:
 
 Then it automatically:
 
-1. Installs Docker (if missing) + git.
-2. Copies the project to `/opt/portfolio`.
-3. Generates `.env` (random `SECRET_KEY` + DB password, `DEBUG=False`).
-4. Points the Nginx configs at your domain.
-5. Builds and starts the stack (`docker compose -f docker-compose.prod.yml`).
-6. Runs migrations, `collectstatic`, and creates your admin superuser.
-7. Obtains a Let's Encrypt certificate and switches Nginx to HTTPS.
-8. Schedules twice-daily SSL auto-renewal (cron).
+1. Installs Docker (if missing), plus the server's **host Nginx** and Certbot.
+2. Copies the project to `/opt/portfolio` (its own folder — data-safe on re-run).
+3. Generates `.env` (random `SECRET_KEY` + DB password, `DEBUG=False`) and picks
+   a free local port for Gunicorn.
+4. Builds and starts the two-service Docker stack
+   (`docker compose -p portfolio -f docker-compose.server.yml`) with Gunicorn on
+   `127.0.0.1:<port>`.
+5. Runs migrations, `collectstatic`, and creates your admin superuser.
+6. Adds a **host Nginx** site that routes your domain → `127.0.0.1:<port>` and
+   serves `/static/` + `/media/` from disk.
+7. Obtains a Let's Encrypt certificate with `certbot --nginx` (adds the
+   HTTP→HTTPS redirect).
+8. Enables SSL auto-renewal (certbot systemd timer, cron fallback).
 9. Installs the `portfolio` management command.
+
+Because it reuses the shared host Nginx on ports 80/443 rather than binding them
+itself, it **coexists with other sites** already running on the server.
 
 > If DNS hasn't propagated yet, the site still comes up over HTTP and SSL is
 > skipped — run `portfolio` → **Domain & SSL** → *Issue SSL* once it resolves.
@@ -87,8 +95,10 @@ Type `portfolio` on the server for a menu:
 - Add a hero video: drop `hero.webm` / `hero.mp4` into `static/video/`
   (see `static/video/README.md`), then `portfolio` → Update or restart.
 
-## Before publishing the repo
+## Notes
 
-Replace the placeholder repo URL in `install.sh` (`REPO_URL=`) and the
-`yourusername` references with your real GitHub repo so the one-line installer
-and the CLI's *Update* command work.
+- The installer and the CLI's *Update* command pull from
+  `github.com/Mahdi-Shafiei-IRAN/portfolio` (branch `main`). If you fork or
+  rename the repo, update `REPO_URL` in `install.sh` accordingly.
+- Running the installer again is safe: it preserves your existing `.env`,
+  database, and uploaded media.

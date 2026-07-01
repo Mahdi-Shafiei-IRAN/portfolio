@@ -8,18 +8,19 @@ RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 CYAN='\033[0;36m'; BLUE='\033[0;34m'; BOLD='\033[1m'; DIM='\033[2m'; NC='\033[0m'
 
 INSTALL_DIR='/opt/portfolio'
-COMPOSE_FILE='docker-compose.prod.yml'
+COMPOSE_FILE='docker-compose.server.yml'
+PROJECT='portfolio'
 ENV_FILE="${INSTALL_DIR}/.env"
 
 [[ $EUID -ne 0 ]] && exec sudo bash "$0" "$@"
 [[ -d "$INSTALL_DIR" ]] || { echo "Install dir ${INSTALL_DIR} not found."; exit 1; }
 cd "$INSTALL_DIR" || exit 1
 
-# Resolve compose command
+# Resolve compose command (explicit project name keeps this stack isolated)
 if docker compose version &>/dev/null; then
-    COMPOSE="docker compose -f ${COMPOSE_FILE}"
+    COMPOSE="docker compose -p ${PROJECT} -f ${COMPOSE_FILE}"
 elif command -v docker-compose &>/dev/null; then
-    COMPOSE="docker-compose -f ${COMPOSE_FILE}"
+    COMPOSE="docker-compose -p ${PROJECT} -f ${COMPOSE_FILE}"
 else
     echo "Docker Compose not found."; exit 1
 fi
@@ -47,7 +48,7 @@ web_status() {
     local s; s=$($COMPOSE ps --status running --services 2>/dev/null | grep -c '^web$')
     [[ "$s" == "1" ]] && echo -e "${GREEN}● running${NC}" || echo -e "${RED}● stopped${NC}"
 }
-https_active() { grep -q "listen 443" nginx/default.conf 2>/dev/null; }
+https_active() { grep -q "listen 443" /etc/nginx/sites-available/portfolio 2>/dev/null; }
 
 header() {
     clear; echo ""
@@ -90,9 +91,10 @@ menu_domain() {
             read -rp "  Also serve www.${new}? [Y/n]: " w
             local hosts="$new"; [[ ! "$w" =~ ^[Nn]$ ]] && hosts="${new},www.${new}"
             set_env ALLOWED_HOSTS "$hosts"
-            # repoint nginx (both http + ssl configs)
-            sed -i "s/${old}/${new}/g" nginx/default.conf nginx/default.ssl.conf 2>/dev/null
-            $COMPOSE restart web nginx >/dev/null 2>&1
+            # repoint host nginx server_name (space-separated) + reload
+            sed -i "s/server_name .*/server_name ${hosts//,/ };/" /etc/nginx/sites-available/portfolio 2>/dev/null
+            nginx -t 2>/dev/null && systemctl reload nginx
+            $COMPOSE restart web >/dev/null 2>&1
             ok "Domain changed to ${new} — now issue SSL (option 2)"
             pause ;;
         2)
@@ -101,10 +103,8 @@ menu_domain() {
             w_d=$(get_env ALLOWED_HOSTS | tr ',' '\n' | grep -E "^www\." | head -1)
             [[ -n "$w_d" ]] && args+=(-d "$w_d")
             info "Requesting certificate for ${d}..."
-            if $COMPOSE run --rm certbot certonly --webroot --webroot-path /var/www/certbot \
-                "${args[@]}" --email "admin@${d}" --agree-tos --no-eff-email --non-interactive 2>&1 | tail -6; then
-                cp nginx/default.ssl.conf nginx/default.conf
-                $COMPOSE restart nginx >/dev/null 2>&1
+            if certbot --nginx "${args[@]}" --non-interactive --agree-tos \
+                --email "admin@${d}" --redirect 2>&1 | tail -6; then
                 ok "SSL enabled — https://${d}"
             else
                 fail "SSL failed — check that DNS points here"
@@ -214,14 +214,10 @@ menu_update() {
     read -rp "$(echo -e "  ${YELLOW}Proceed? [y/N]:${NC} ")" c
     [[ ! "$c" =~ ^[Yy]$ ]] && return
 
-    info "Stashing local config edits (nginx domain + .env are preserved)..."
-    git -C "$INSTALL_DIR" stash push -q -- nginx/default.conf 2>/dev/null || true
-
-    info "Pulling latest code..."
+    info "Pulling latest code (.env, DB, media and host nginx site are preserved)..."
     if ! git -C "$INSTALL_DIR" pull --rebase 2>&1 | tail -3; then
         fail "git pull failed — check connectivity / local changes"; pause; return
     fi
-    git -C "$INSTALL_DIR" stash pop -q 2>/dev/null || true
 
     info "Rebuilding and restarting..."
     $COMPOSE up -d --build 2>&1 | tail -5
@@ -315,6 +311,9 @@ menu_uninstall() {
 
     info "Stopping containers and removing volumes..."
     $COMPOSE down -v --rmi local 2>/dev/null
+    info "Removing host nginx site..."
+    rm -f /etc/nginx/sites-enabled/portfolio /etc/nginx/sites-available/portfolio
+    nginx -t 2>/dev/null && systemctl reload nginx
     info "Removing cron renewal..."
     ( crontab -l 2>/dev/null | grep -v 'certbot renew' ) | crontab - 2>/dev/null
     info "Removing files..."

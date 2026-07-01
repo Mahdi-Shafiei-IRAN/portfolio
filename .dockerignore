@@ -16,8 +16,6 @@ __pycache__/
 # VCS & project meta
 .git/
 .gitignore
-.superpowers/
-*claude/
 graphify-out/
 
 # Docs, plans, tooling

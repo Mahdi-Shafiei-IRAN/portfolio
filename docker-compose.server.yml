@@ -1,0 +1,32 @@
+# Two-service production stack. Host nginx (not in this file) reverse-proxies
+# the domain to 127.0.0.1:${WEB_PORT} and serves /static/ + /media/ from the
+# bind-mounted dirs below. Run with an explicit project name for isolation:
+#   docker compose -p portfolio -f docker-compose.server.yml up -d --build
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.prod
+    depends_on:
+      - db
+    volumes:
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+    ports:
+      # Localhost-only: never publicly reachable; host nginx proxies to it.
+      - "127.0.0.1:${WEB_PORT}:8000"
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+volumes:
+  postgres_data:

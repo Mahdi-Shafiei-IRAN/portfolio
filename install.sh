@@ -1,11 +1,13 @@
 #!/bin/bash
 # ============================================================
 #  Mahdi — Portfolio  ·  One-Command Installer (Ubuntu 20.04+)
-#  Docker + Django + PostgreSQL + Nginx + Let's Encrypt
+#  Django + PostgreSQL in Docker, behind the server's host Nginx.
+#  Coexists with other projects on the same server (shared host
+#  nginx on :80/:443); each project stays in its own folder.
 #
 #  Usage (from a cloned repo):
 #    sudo bash install.sh
-#  Or one-liner (replace with your repo URL):
+#  Or one-liner:
 #    sudo bash <(curl -Ls https://raw.githubusercontent.com/Mahdi-Shafiei-IRAN/portfolio/main/install.sh)
 # ============================================================
 set -o pipefail
@@ -24,8 +26,9 @@ step()    { echo -e "\n${BOLD}${CYAN}━━━ $1 ━━━${NC}"; }
 
 # ---- Config ----
 INSTALL_DIR="/opt/portfolio"
-REPO_URL="https://github.com/Mahdi-Shafiei-IRAN/portfolio.git"   # <-- change to your repo
-COMPOSE_FILE="docker-compose.prod.yml"
+REPO_URL="https://github.com/Mahdi-Shafiei-IRAN/portfolio.git"
+PROJECT="portfolio"
+COMPOSE_FILE="docker-compose.server.yml"
 
 clear
 C1='\033[38;5;42m'; C2='\033[38;5;36m'; CW='\033[1;37m'; CG='\033[38;5;46m'; CY='\033[38;5;226m'
@@ -40,8 +43,8 @@ echo ""
 echo -e "  ${CW}Mahdi — Portfolio${NC}  ${DIM}+${NC}  ${CG}One-Click Installer${NC}"
 echo ""
 echo -e "  ${DIM}┌─────────────────────────────────────────────────┐${NC}"
-echo -e "  ${DIM}│${NC}  ${CY}Stack    ${NC}  Django · PostgreSQL · Nginx · Docker  ${DIM}│${NC}"
-echo -e "  ${DIM}│${NC}  ${CY}Features ${NC}  Admin Panel · SSL · Auto-Renew        ${DIM}│${NC}"
+echo -e "  ${DIM}│${NC}  ${CY}Stack    ${NC}  Django · PostgreSQL · Docker         ${DIM}│${NC}"
+echo -e "  ${DIM}│${NC}  ${CY}Proxy    ${NC}  Shared host Nginx + Let's Encrypt     ${DIM}│${NC}"
 echo -e "  ${DIM}│${NC}  ${CY}Platform ${NC}  Ubuntu 20.04+                         ${DIM}│${NC}"
 echo -e "  ${DIM}└─────────────────────────────────────────────────┘${NC}"
 echo ""
@@ -94,13 +97,13 @@ read -rp "$(echo -e "  ${BOLD}Proceed with installation? [y/N]:${NC} ")" CONFIRM
 [[ ! "$CONFIRM" =~ ^[Yy]$ ]] && echo "Aborted." && exit 0
 
 # ══════════════════════════════════════════════
-#  STEP 2 — System dependencies (Docker + git)
+#  STEP 2 — System dependencies (Docker + host Nginx + Certbot)
 # ══════════════════════════════════════════════
 step "Installing System Dependencies"
 
 apt-get update -qq
-apt-get install -y -qq curl git ca-certificates >/dev/null
-success "curl, git installed"
+apt-get install -y -qq curl git ca-certificates rsync nginx certbot python3-certbot-nginx >/dev/null
+success "curl, git, rsync, nginx, certbot installed"
 
 if command -v docker &>/dev/null; then
     success "Docker already installed: $(docker --version | cut -d, -f1)"
@@ -112,22 +115,24 @@ else
     success "Docker installed"
 fi
 
-# Compose v2 (docker compose) or legacy docker-compose
 if docker compose version &>/dev/null; then
-    COMPOSE="docker compose -f ${COMPOSE_FILE}"
+    COMPOSE="docker compose -p ${PROJECT} -f ${COMPOSE_FILE}"
 elif command -v docker-compose &>/dev/null; then
-    COMPOSE="docker-compose -f ${COMPOSE_FILE}"
+    COMPOSE="docker-compose -p ${PROJECT} -f ${COMPOSE_FILE}"
 else
     info "Installing docker compose plugin..."
     apt-get install -y -qq docker-compose-plugin >/dev/null 2>&1
     docker compose version &>/dev/null \
-        && COMPOSE="docker compose -f ${COMPOSE_FILE}" \
+        && COMPOSE="docker compose -p ${PROJECT} -f ${COMPOSE_FILE}" \
         || error "Docker Compose not available — install it and re-run."
 fi
 success "Using: ${COMPOSE}"
 
+systemctl enable --now nginx >/dev/null 2>&1
+success "Host nginx active"
+
 # ══════════════════════════════════════════════
-#  STEP 3 — Fetch project
+#  STEP 3 — Fetch project (preserve data on re-run)
 # ══════════════════════════════════════════════
 step "Fetching Project Files"
 
@@ -135,76 +140,87 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)"
 if [[ -n "$SCRIPT_DIR" ]] && [[ -f "${SCRIPT_DIR}/manage.py" ]] && [[ -f "${SCRIPT_DIR}/${COMPOSE_FILE}" ]]; then
     info "Using local project files from ${SCRIPT_DIR}"
     mkdir -p "$INSTALL_DIR"
-    # Copy everything except local-only artifacts
-    rsync -a --delete \
-        --exclude '.venv' --exclude 'db.sqlite3' --exclude '.git' \
+    # Never overwrite runtime data: .env, media, staticfiles, backups are excluded.
+    rsync -a \
+        --exclude '.venv' --exclude '.git' --exclude 'db.sqlite3' \
         --exclude 'graphify-out' --exclude '__pycache__' \
+        --exclude '.env' --exclude 'media' --exclude 'staticfiles' --exclude 'backups' \
         "${SCRIPT_DIR}/" "$INSTALL_DIR/" 2>/dev/null \
         || cp -r "${SCRIPT_DIR}/." "$INSTALL_DIR/"
+elif [[ -d "${INSTALL_DIR}/.git" ]]; then
+    info "Existing install found — pulling latest code (data preserved)..."
+    git -C "$INSTALL_DIR" pull --rebase 2>&1 | tail -3 || warn "git pull failed — using existing code"
 else
     info "Cloning from ${REPO_URL}..."
-    rm -rf "$INSTALL_DIR"
+    # Only wipe the dir if there is no existing install to protect.
+    [[ -f "${INSTALL_DIR}/.env" ]] || rm -rf "$INSTALL_DIR"
     git clone --depth=1 "$REPO_URL" "$INSTALL_DIR" \
         || error "Could not clone repository. Check REPO_URL and internet connection."
 fi
 cd "$INSTALL_DIR" || error "Install dir not found"
+mkdir -p "${INSTALL_DIR}/staticfiles" "${INSTALL_DIR}/media"
 success "Project ready at ${INSTALL_DIR}"
 
 # ══════════════════════════════════════════════
-#  STEP 4 — Generate .env
+#  STEP 4 — Pick a free localhost port for Gunicorn
+# ══════════════════════════════════════════════
+step "Allocating Local Port"
+
+pick_port() {
+    local p
+    for p in $(seq 8001 8099); do
+        ss -ltn 2>/dev/null | grep -q ":${p} " || { echo "$p"; return; }
+    done
+    echo 8001
+}
+WEB_PORT="$(grep -oP '(?<=^WEB_PORT=).*' .env 2>/dev/null || true)"
+[[ -z "$WEB_PORT" ]] && WEB_PORT="$(pick_port)"
+success "Gunicorn will listen on 127.0.0.1:${WEB_PORT}"
+
+# ══════════════════════════════════════════════
+#  STEP 5 — Generate / preserve .env
 # ══════════════════════════════════════════════
 step "Generating Configuration"
 
 rand() { tr -dc 'a-zA-Z0-9' </dev/urandom | head -c "$1"; }
-SECRET_KEY="$(rand 64)"
-PG_DB="portfolio"
-PG_USER="portfolio"
-PG_PASS="$(rand 32)"
-
 ALLOWED="${DOMAIN}"
 [[ -n "$WWW_DOMAIN" ]] && ALLOWED="${DOMAIN},${WWW_DOMAIN}"
 
-cat > "${INSTALL_DIR}/.env" <<EOF
+if [[ ! -f .env ]]; then
+    PG_PASS="$(rand 32)"
+    cat > .env <<EOF
 # Generated by install.sh on $(date -u +%Y-%m-%dT%H:%M:%SZ)
-SECRET_KEY=${SECRET_KEY}
+SECRET_KEY=$(rand 64)
 DEBUG=False
 ALLOWED_HOSTS=${ALLOWED}
+WEB_PORT=${WEB_PORT}
 
 # Database (web container reaches Postgres at host 'db')
-DATABASE_URL=postgres://${PG_USER}:${PG_PASS}@db:5432/${PG_DB}
-POSTGRES_DB=${PG_DB}
-POSTGRES_USER=${PG_USER}
+DATABASE_URL=postgres://portfolio:${PG_PASS}@db:5432/portfolio
+POSTGRES_DB=portfolio
+POSTGRES_USER=portfolio
 POSTGRES_PASSWORD=${PG_PASS}
 EOF
-chmod 600 "${INSTALL_DIR}/.env"
-success ".env written (DEBUG=False, generated SECRET_KEY + DB password)"
-
-# Inject the real domain into both nginx configs
-for conf in nginx/default.conf nginx/default.ssl.conf; do
-    [[ -f "$conf" ]] || continue
-    if [[ -n "$WWW_DOMAIN" ]]; then
-        sed -i "s/yourdomain.com www.yourdomain.com/${DOMAIN} ${WWW_DOMAIN}/g" "$conf"
-    else
-        sed -i "s/yourdomain.com www.yourdomain.com/${DOMAIN}/g" "$conf"
-    fi
-    sed -i "s/yourdomain.com/${DOMAIN}/g" "$conf"
-done
-success "Nginx configs pointed at ${DOMAIN} (HTTP bootstrap active)"
+    chmod 600 .env
+    success ".env written (generated SECRET_KEY + DB password, DEBUG=False)"
+else
+    sed -i "s|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=${ALLOWED}|" .env
+    grep -q '^WEB_PORT=' .env || echo "WEB_PORT=${WEB_PORT}" >> .env
+    success "Existing .env preserved (updated ALLOWED_HOSTS)"
+fi
 
 # ══════════════════════════════════════════════
-#  STEP 5 — Build & start the stack
+#  STEP 6 — Build & start the stack
 # ══════════════════════════════════════════════
 step "Building & Starting Containers"
 
 $COMPOSE up -d --build 2>&1 | tail -6 \
     || error "docker compose build/up failed — see output above."
 
-info "Waiting for database & web to become healthy..."
+info "Waiting for web to become healthy..."
 for i in $(seq 1 30); do
     sleep 2
-    if $COMPOSE exec -T web python manage.py check >/dev/null 2>&1; then
-        break
-    fi
+    $COMPOSE exec -T web python manage.py check >/dev/null 2>&1 && break
 done
 
 info "Running migrations..."
@@ -221,10 +237,32 @@ $COMPOSE exec -T \
     && success "Admin user '${ADMIN_USER}' created" \
     || warn "Superuser may already exist — change the password later with: portfolio"
 
-success "Stack is up (HTTP)"
+success "App is up on 127.0.0.1:${WEB_PORT}"
 
 # ══════════════════════════════════════════════
-#  STEP 6 — SSL via Let's Encrypt (dockerized certbot)
+#  STEP 7 — Host Nginx site (routes this domain only)
+# ══════════════════════════════════════════════
+step "Configuring Host Nginx"
+
+SERVER_NAMES="${DOMAIN}"
+[[ -n "$WWW_DOMAIN" ]] && SERVER_NAMES="${DOMAIN} ${WWW_DOMAIN}"
+
+sed -e "s|__SERVER_NAMES__|${SERVER_NAMES}|g" \
+    -e "s|__WEB_PORT__|${WEB_PORT}|g" \
+    -e "s|__INSTALL_DIR__|${INSTALL_DIR}|g" \
+    deploy/nginx-site.conf.template > /etc/nginx/sites-available/portfolio
+ln -sf /etc/nginx/sites-available/portfolio /etc/nginx/sites-enabled/portfolio
+
+if nginx -t 2>/dev/null; then
+    systemctl reload nginx
+    success "Nginx routing ${SERVER_NAMES} → 127.0.0.1:${WEB_PORT}"
+else
+    nginx -t
+    error "nginx config invalid — see output above."
+fi
+
+# ══════════════════════════════════════════════
+#  STEP 8 — SSL via host Certbot
 # ══════════════════════════════════════════════
 step "Obtaining SSL Certificate"
 
@@ -232,36 +270,23 @@ CB_DOMAINS=(-d "$DOMAIN")
 [[ -n "$WWW_DOMAIN" ]] && CB_DOMAINS+=(-d "$WWW_DOMAIN")
 
 info "Requesting certificate for ${DOMAIN}${WWW_DOMAIN:+ + }${WWW_DOMAIN}..."
-if $COMPOSE run --rm certbot certonly \
-    --webroot --webroot-path /var/www/certbot \
-    "${CB_DOMAINS[@]}" \
-    --email "$ADMIN_EMAIL" --agree-tos --no-eff-email --non-interactive 2>&1 | tail -8; then
-
-    if [[ -d "/var/lib/docker/volumes" ]] && $COMPOSE run --rm certbot certificates 2>/dev/null | grep -q "$DOMAIN"; then
-        info "Switching Nginx to HTTPS config..."
-        cp nginx/default.ssl.conf nginx/default.conf
-        $COMPOSE restart nginx
-        success "HTTPS active — https://${DOMAIN}"
-        SSL_OK=true
-    else
-        warn "Certificate issued but verification was inconclusive — switching anyway."
-        cp nginx/default.ssl.conf nginx/default.conf
-        $COMPOSE restart nginx
-        SSL_OK=true
-    fi
+if certbot --nginx "${CB_DOMAINS[@]}" \
+    --non-interactive --agree-tos --email "$ADMIN_EMAIL" --redirect 2>&1 | tail -8; then
+    success "HTTPS active — https://${DOMAIN}"
+    SSL_OK=true
 else
     warn "SSL issuance failed (DNS not pointed here yet?). Site is live over HTTP."
-    warn "After DNS propagates, run:  portfolio   →  Domain management → Re-issue SSL"
+    warn "After DNS propagates, run:  portfolio  → Domain & SSL → Issue SSL"
     SSL_OK=false
 fi
 
-# Auto-renew: cron runs certbot renew + reloads nginx (twice daily)
-RENEW_CMD="cd ${INSTALL_DIR} && ${COMPOSE} run --rm certbot renew --webroot --webroot-path /var/www/certbot --quiet && ${COMPOSE} restart nginx"
-( crontab -l 2>/dev/null | grep -v 'certbot renew'; echo "0 3,15 * * * ${RENEW_CMD}" ) | crontab -
-success "Auto-renewal scheduled (cron, twice daily)"
+# certbot's systemd timer handles renewal; add a cron fallback if it's absent.
+systemctl enable certbot.timer >/dev/null 2>&1 \
+    || ( crontab -l 2>/dev/null | grep -v 'certbot renew'; echo "0 3 * * * certbot renew --quiet" ) | crontab -
+success "Auto-renewal scheduled"
 
 # ══════════════════════════════════════════════
-#  STEP 7 — Install management CLI
+#  STEP 9 — Install management CLI
 # ══════════════════════════════════════════════
 step "Installing 'portfolio' Management Tool"
 
