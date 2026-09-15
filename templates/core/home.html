@@ -7,9 +7,7 @@
     <meta name="description" content="Mahdi — Backend Developer. A cinematic, scroll-driven portfolio in Python & Django.">
     <title>Mahdi — Backend Developer</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
     <link rel="stylesheet" href="{% static 'css/cinematic.css' %}">
 </head>
 <body data-frames-base="{% static 'frames/' %}" data-frame-count="{{ frame_count }}"
@@ -107,9 +105,8 @@
                 </article>
                 {% empty %}
                 <article class="glass-card project-card project-empty">
-                    <h3 class="project-title">No projects yet</h3>
-                    <p class="project-desc">Add your work in the
-                        <a href="/admin/projects/project/add/">admin panel</a> and it appears here.</p>
+                    <h3 class="project-title">Projects coming soon</h3>
+                    <p class="project-desc">Selected work will appear here shortly.</p>
                 </article>
                 {% endfor %}
             </div>
@@ -151,9 +148,9 @@
 
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+    <script src="{% static 'js/vendor/lenis.min.js' %}"></script>
+    <script src="{% static 'js/vendor/gsap.min.js' %}"></script>
+    <script src="{% static 'js/vendor/ScrollTrigger.min.js' %}"></script>
     <script src="{% static 'js/cinematic.js' %}"></script>
 </body>
 </html>
