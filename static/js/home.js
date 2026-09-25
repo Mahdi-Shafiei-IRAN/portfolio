@@ -139,8 +139,10 @@
         chip.addEventListener('pointercancel', (e) => release(e, false));
 
         chip.addEventListener('click', (e) => {
+            if (suppressClick) { e.preventDefault(); return; }             // the click that ends a drag
+            if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;  // new tab/window: browser default
             e.preventDefault();
-            if (!suppressClick) choose(chip);     // tap, click or Enter
+            choose(chip);                                                  // tap, click or Enter
         });
     });
 

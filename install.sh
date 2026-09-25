@@ -218,19 +218,17 @@ $COMPOSE up -d --build 2>&1 | tail -6 \
     || error "docker compose build/up failed — see output above."
 
 info "Waiting for web to become healthy..."
+healthy=false
 for i in $(seq 1 30); do
     sleep 2
-    $COMPOSE exec -T web python manage.py check >/dev/null 2>&1 && break
+    $COMPOSE exec -T web python manage.py check >/dev/null 2>&1 && { healthy=true; break; }
 done
+# The container collects static files before Gunicorn starts (deploy/entrypoint.sh)
+# and exits if that fails, so a web service that never gets healthy is a hard stop.
+$healthy || error "web container did not start — see: $COMPOSE logs web"
 
 info "Running migrations..."
 $COMPOSE exec -T web python manage.py migrate --noinput 2>&1 | tail -4
-
-info "Collecting static files..."
-$COMPOSE exec -T web python manage.py collectstatic --noinput --clear --verbosity 0 \
-    || error "collectstatic failed — see the output above."
-# Gunicorn workers read staticfiles.json once at startup; restart so they load the new one.
-$COMPOSE restart web >/dev/null 2>&1
 
 info "Creating admin superuser..."
 $COMPOSE exec -T \

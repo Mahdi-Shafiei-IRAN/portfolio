@@ -243,14 +243,8 @@ menu_update() {
 
     info "Applying migrations..."
     $COMPOSE exec -T web python manage.py migrate --noinput 2>&1 | tail -3
-
-    info "Collecting static files..."
-    if ! $COMPOSE exec -T web python manage.py collectstatic --noinput --clear --verbosity 0; then
-        fail "collectstatic failed — see the output above. The site may be missing CSS/JS."
-        pause; return
-    fi
-    # Gunicorn workers read staticfiles.json once at startup; restart so they load the new one.
-    $COMPOSE restart web >/dev/null 2>&1
+    # Static files are collected by the container itself before Gunicorn starts
+    # (deploy/entrypoint.sh); if that fails the web status check below reports it.
     patch_nginx_static
 
     if [[ "$(web_status)" == *running* ]]; then

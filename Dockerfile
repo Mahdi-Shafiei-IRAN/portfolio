@@ -30,6 +30,8 @@ RUN python manage.py collectstatic --no-input
 
 EXPOSE 8000
 
+# Re-collect into the bind-mounted staticfiles/ before Gunicorn starts.
+ENTRYPOINT ["sh", "deploy/entrypoint.sh"]
 CMD ["gunicorn", "config.wsgi:application", \
      "--bind", "0.0.0.0:8000", \
      "--workers", "3", \
