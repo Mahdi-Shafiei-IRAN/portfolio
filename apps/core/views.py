@@ -5,46 +5,13 @@ from apps.projects.models import Project
 
 from . import content
 
-SKILLS = [
-    'Python', 'Django', 'PostgreSQL', 'SQL',
-    'Git', 'Docker', 'REST APIs', 'Linux', 'Networking',
-]
-
-# Grouped skills for the Skills section (richer than a flat list).
-SKILL_GROUPS = [
-    {
-        'name': 'Languages & Frameworks',
-        'items': ['Python', 'Django', 'Django REST Framework', 'SQL'],
-    },
-    {
-        'name': 'Data & Storage',
-        'items': ['PostgreSQL', 'Redis', 'Database Design'],
-    },
-    {
-        'name': 'DevOps & Infrastructure',
-        'items': ['Docker', 'Nginx', 'Git', 'Linux', 'CI/CD', 'Networking'],
-    },
-]
-
-# Number of scroll-driven background frames in static/frames/.
-# Regenerate frames with: ffmpeg -i static/video/hero.mp4 -vf "fps=<F>,scale=768:-1" \
-#   -c:v libwebp -quality 80 static/frames/frame_%04d.webp
-# then set this to the resulting `ls static/frames | wc -l`.
-FRAME_COUNT = 200
-# Lighter set for phones (static/frames-m/) — saves data + memory on mobile.
-FRAME_COUNT_MOBILE = 120
-
 
 class HomeView(TemplateView):
     template_name = 'core/home.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['projects'] = Project.objects.all()
-        ctx['skills'] = SKILLS
-        ctx['skill_groups'] = SKILL_GROUPS
-        ctx['frame_count'] = FRAME_COUNT
-        ctx['frame_count_mobile'] = FRAME_COUNT_MOBILE
+        ctx['home'] = content.HOME
         return ctx
 
 

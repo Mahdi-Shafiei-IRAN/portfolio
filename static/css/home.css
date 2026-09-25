@@ -1,0 +1,137 @@
+/* Landing page: typewriter greeting, drag-a-role chips, waving doodle. */
+
+/* The stage stays pinned for 600px of scrolling; the sentence switches at 300px,
+   so the switch always happens while pinned, whatever the viewport height. */
+.landing { height: calc(100vh + 600px); }
+
+.landing-stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--gutter) 22vh;
+    text-align: center;
+}
+
+.greeting {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    gap: .15em .4em;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: clamp(1.45rem, 6.2vw, 3.2rem);
+    letter-spacing: .1em;
+}
+.caret {
+    display: inline-block;
+    width: 3px;
+    height: 1.05em;
+    margin-left: 4px;
+    vertical-align: -.15em;
+    background: var(--muted);
+    animation: caret-blink 1s steps(1) infinite;
+}
+@keyframes caret-blink { 50% { opacity: 0; } }
+
+.drop-slot {
+    display: none;
+    min-width: 7ch;
+    padding: 0 .1em .05em;
+    border-bottom: 4px solid var(--accent);
+    color: var(--muted);
+    font-style: italic;
+    transition: color .2s, transform .2s;
+}
+.drop-slot.over { transform: scale(1.06); color: var(--ink); }
+.drop-slot.filled { color: var(--ink); font-style: normal; }
+
+.swap { display: grid; justify-items: center; margin-top: 10px; }
+.big-name {
+    margin: 0;
+    font-family: var(--font-head);
+    font-weight: 800;
+    font-size: clamp(3.4rem, 15vw, 6.8rem);
+    line-height: 1;
+    letter-spacing: .01em;
+}
+.scroll-hint {
+    margin: 22px 0 0;
+    color: var(--muted);
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    letter-spacing: .14em;
+    transition: opacity .4s;
+}
+.scroll-hint.hidden { opacity: 0; }
+
+.chip-tray {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 22px;
+    margin-top: 18px;
+    padding: 14px 22px;
+    border: 3px dashed var(--ink);
+    border-radius: 12px;
+}
+.chip {
+    position: relative;
+    z-index: 2;
+    padding: 4px 6px;
+    color: var(--ink);
+    font-size: clamp(.9rem, 2.6vw, 1.05rem);
+    text-decoration: none;
+    cursor: grab;
+    touch-action: none;                    /* Pointer Events drive touch drags */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+.chip .br { color: var(--accent); }
+.chip.dragging { z-index: 20; cursor: grabbing; }
+.chip.returning { transition: transform .3s cubic-bezier(.22, 1, .36, 1); }
+.chip.used { visibility: hidden; }
+
+.waving {
+    position: absolute;
+    left: 50%;
+    bottom: -6vh;
+    width: min(520px, 88vw, 53vh);          /* 53vh wide ≈ 40vh tall: never covers the text */
+    height: auto;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+:root[data-theme='dark'] .waving { filter: invert(1); }
+
+.touch { padding: 90px var(--gutter) 30px; text-align: center; }
+.touch h2 { margin-bottom: 12px; font-size: clamp(1.8rem, 5vw, 2.6rem); font-weight: 800; }
+.touch p { max-width: 42ch; margin: 0 auto 26px; color: var(--muted); }
+
+/* ---------- JS-driven states (without JS everything above is simply visible) ---------- */
+.js .swap > * { grid-area: 1 / 1; align-self: start; }   /* overlap without stretching */
+.js .intro { transition: opacity .35s, visibility .35s; }
+.js .big-name { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+.js .typed .big-name { opacity: 1; transform: none; }
+.js .waving {
+    opacity: 0;
+    transform: translate(-50%, 100px);
+    transition: opacity 1.2s cubic-bezier(.22, 1, .36, 1), transform 1.2s cubic-bezier(.22, 1, .36, 1);
+}
+.js .typed .waving { opacity: 1; transform: translateX(-50%); }
+.js .chip-tray {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity .35s, transform .35s, visibility .35s;
+}
+.js .scrolled .chip-tray { opacity: 1; visibility: visible; transform: none; }
+.js .scrolled .intro { opacity: 0; visibility: hidden; }
+.js .scrolled .drop-slot { display: inline-block; }
+
+body.leaving main, body.leaving .site-header { opacity: 0; transition: opacity .5s ease; }

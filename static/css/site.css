@@ -193,6 +193,9 @@ body.menu-open .menu-scrim { opacity: 1; visibility: visible; }
     touch-action: none;
 }
 .scrollbar.dragging .scrollbar-thumb { cursor: grabbing; }
+@media (max-width: 600px) {
+    .scrollbar { right: 4px; width: 6px; }  /* stays inside the 20px side gutter */
+}
 
 /* ---------- Buttons ---------- */
 .btn {
