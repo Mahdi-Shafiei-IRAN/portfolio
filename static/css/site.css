@@ -1,0 +1,228 @@
+/* Global chrome shared by every page: tokens, header, menu, footer,
+   theme toggle, custom scrollbar, buttons, page transitions. */
+
+:root {
+    --bg: #ffffff;
+    --ink: #1f1e1b;
+    --muted: #5f5d6b;
+    --line: #dcdbe1;
+    --card: #ffffff;
+    --accent: #f5a045;
+    --accent-dark: #e8913d;
+    --font-body: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --font-head: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-logo: 'Gochi Hand', 'Comic Sans MS', cursive;
+    --radius: 14px;
+    --gutter: clamp(20px, 5vw, 44px);
+    color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+    --bg: #17161b;
+    --ink: #e9e8ec;
+    --muted: #a3a1ad;
+    --line: #34323b;
+    --card: #1f1e24;
+    color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html {
+    scroll-behavior: smooth;
+    scrollbar-width: none;              /* native bar hidden; the custom one is below */
+}
+html::-webkit-scrollbar { display: none; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .25s ease, color .25s ease;
+}
+
+h1, h2, h3 { font-family: var(--font-head); line-height: 1.1; margin: 0; }
+a { color: inherit; }
+img { max-width: 100%; height: auto; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+/* ---------- Header ---------- */
+.site-header {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px var(--gutter);
+    pointer-events: none;               /* only the logo and the button take clicks */
+}
+.site-header > * { pointer-events: auto; }
+
+.logo {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-logo);
+    font-size: 1.35rem;
+    line-height: .95;
+    letter-spacing: .04em;
+    text-decoration: none;
+    color: var(--ink);
+}
+
+.menu-toggle {
+    display: grid;
+    gap: 6px;
+    width: 44px;
+    height: 44px;
+    place-content: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+}
+.menu-toggle span { display: block; width: 28px; height: 3px; border-radius: 2px; background: currentColor; }
+
+/* ---------- Slide-in menu ---------- */
+.site-menu {
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 60;
+    width: min(360px, 78vw);
+    padding: 96px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: var(--bg);
+    border-left: 1px solid var(--line);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform .35s cubic-bezier(.22, 1, .36, 1), visibility .35s;
+}
+.site-menu a {
+    display: block;
+    padding: 12px 20px;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: border-color .2s;
+}
+.site-menu a:hover { border-color: var(--accent); }
+.menu-close {
+    position: absolute;
+    top: 26px;
+    right: var(--gutter);
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font-size: 2.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.menu-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, .25);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .35s, visibility .35s;
+}
+body.menu-open .site-menu { transform: none; visibility: visible; }
+body.menu-open .menu-scrim { opacity: 1; visibility: visible; }
+
+/* ---------- Footer ---------- */
+.site-footer {
+    padding: 48px var(--gutter) 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: .85rem;
+}
+.footer-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 22px; margin-bottom: 10px; }
+.footer-links a { color: var(--ink); text-decoration: none; border-bottom: 2px solid var(--accent); }
+.credit { margin: 0; }
+
+/* ---------- Theme toggle ---------- */
+.theme-toggle {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 40;
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+}
+.theme-toggle .icon-sun { display: none; }
+:root[data-theme='dark'] .theme-toggle .icon-sun { display: block; }
+:root[data-theme='dark'] .theme-toggle .icon-moon { display: none; }
+
+/* ---------- Custom scrollbar ---------- */
+.scrollbar {
+    position: fixed;
+    top: 40vh;
+    right: 12px;
+    z-index: 30;
+    width: 8px;
+    height: 20vh;
+    border-radius: 999px;
+    background: var(--line);
+    transition: width .2s;
+}
+.scrollbar:hover, .scrollbar.dragging { width: 12px; }
+.scrollbar-thumb {
+    width: 100%;
+    border-radius: 999px;
+    background: linear-gradient(var(--accent), var(--accent-dark));
+    cursor: grab;
+    touch-action: none;
+}
+.scrollbar.dragging .scrollbar-thumb { cursor: grabbing; }
+
+/* ---------- Buttons ---------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    font: 500 .95rem var(--font-body);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .2s, color .2s, border-color .2s;
+}
+.btn:hover { background: var(--ink); color: var(--bg); }
+.btn-solid { background: var(--ink); color: var(--bg); }
+.btn-solid:hover { background: var(--accent); border-color: var(--accent); color: #1f1e1b; }
+
+/* ---------- Page transitions (cross-document View Transitions) ---------- */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .35s; }
+
+@media (prefers-reduced-motion: reduce) {
+    @view-transition { navigation: none; }
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}

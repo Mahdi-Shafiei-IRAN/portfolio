@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ role.label }} — {{ site.name }}{% endblock %}
+{% block body_class %}page-role theme-{{ role_key }}{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'css/roles.css' %}">{% endblock %}
+
+{% block content %}
+<section class="role-hero">
+    <p class="breadcrumb"><a href="{% url 'core:home' %}">PORTFOLIO</a> / <span>{{ role.label|upper }}</span></p>
+    <h1 class="role-title">{% block role_title %}{{ role.title }}{% endblock %}</h1>
+    <p class="role-tagline">{{ role.tagline }}</p>
+    <div class="role-actions">
+        {% if city_enabled %}<a class="btn btn-solid" href="/city/?spawn={{ role_key }}">🎮 Enter the city</a>{% endif %}
+        <a class="btn" href="#projects">See projects</a>
+    </div>
+    <a class="scroll-cue" href="#projects" aria-label="Scroll to projects">&#8964;</a>
+</section>
+
+<section id="projects" class="projects" aria-label="{{ role.label }} projects">
+    {% for p in projects %}
+    <article class="project-card">
+        {% if p.image %}<img class="project-image" src="{{ p.image.url }}" alt="" loading="lazy" decoding="async">{% endif %}
+        <div class="project-body">
+            {% if p.date_range %}<p class="project-date">{{ p.date_range }}</p>{% endif %}
+            <h2 class="project-title">{{ p.title }}</h2>
+            <p class="project-desc">{{ p.description }}</p>
+            {% if p.tech_list %}<ul class="project-tech">{% for t in p.tech_list %}<li>{{ t }}</li>{% endfor %}</ul>{% endif %}
+            <p class="project-links">
+                {% if p.github_url %}<a href="{{ p.github_url }}" target="_blank" rel="noopener">View Repo ↗</a>{% endif %}
+                {% if p.live_url %}<a href="{{ p.live_url }}" target="_blank" rel="noopener">Live ↗</a>{% endif %}
+            </p>
+        </div>
+    </article>
+    {% empty %}
+    <article class="project-card project-empty">
+        <div class="project-body">
+            <h2 class="project-title">Projects coming soon</h2>
+            <p class="project-desc">New {{ role.label }} work is on its way.</p>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% endblock %}

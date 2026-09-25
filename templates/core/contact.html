@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact — {{ site.name }}{% endblock %}
+{% block body_class %}page-contact{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'css/pages.css' %}">{% endblock %}
+
+{% block content %}
+<section class="contact">
+    <h1>{{ page.heading }}</h1>
+    <p>{{ page.body }}</p>
+    <ul class="contact-list">
+        <li><span>Email</span><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></li>
+        <li><span>GitHub</span><a href="{{ contact.github }}" target="_blank" rel="noopener">{{ contact.github_label }}</a></li>
+        <li><span>LinkedIn</span><a href="{{ contact.linkedin }}" target="_blank" rel="noopener">{{ contact.linkedin_label }}</a></li>
+    </ul>
+</section>
+{% endblock %}

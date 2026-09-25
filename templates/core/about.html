@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About — {{ site.name }}{% endblock %}
+{% block body_class %}page-about{% endblock %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'css/pages.css' %}">{% endblock %}
+
+{% block content %}
+<section class="about">
+    <figure class="avatar">
+        <img src="{% static 'img/doodle/waving-static.png' %}" width="844" height="636" alt="Hand-drawn doodle avatar">
+    </figure>
+    <h1>{{ about.heading }}</h1>
+    <p class="about-body">{{ about.body }}</p>
+    {% if has_resume %}<a class="btn" href="{% static 'resume.pdf' %}" download>Download Resume ↓</a>{% endif %}
+
+    <div class="skills">
+        {% for group in skill_groups %}
+        <div class="skill-group">
+            <h2>{{ group.name }}</h2>
+            <ul>{% for item in group.items %}<li>{{ item }}</li>{% endfor %}</ul>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
