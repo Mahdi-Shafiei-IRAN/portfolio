@@ -4,9 +4,10 @@ from .models import Project
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['order', 'title', 'tech_stack', 'is_featured', 'thumbnail']
+    list_display = ['order', 'title', 'category', 'date_range', 'is_featured', 'thumbnail']
     list_display_links = ['title']
-    list_editable = ['order', 'is_featured']
+    list_editable = ['order', 'category', 'is_featured']
+    list_filter = ['category', 'is_featured']
     ordering = ['order']
     search_fields = ['title', 'description']
 
