@@ -91,9 +91,9 @@ Type `portfolio` on the server for a menu:
 
 ## After install
 
-- Add projects: `https://<domain>/admin/projects/project/`
-- Add a hero video: drop `hero.webm` / `hero.mp4` into `static/video/`
-  (see `static/video/README.md`), then `portfolio` → Update or restart.
+- Add projects: `https://<domain>/admin/projects/project/` — set each one's
+  **category** (Backend / DevOps / Network) to choose its role page.
+- Add a resume: commit `static/resume.pdf`, then `portfolio` → Update.
 
 ## Notes
 

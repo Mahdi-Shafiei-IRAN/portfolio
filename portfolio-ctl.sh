@@ -199,6 +199,25 @@ menu_service() {
     done
 }
 
+# Bring an existing nginx site file in line with deploy/nginx-site.conf.template's
+# /static/ block (the file is written once at install and later edited by certbot,
+# so it is patched in place). Idempotent; rolls back if nginx rejects the result.
+patch_nginx_static() {
+    local f=/etc/nginx/sites-available/portfolio
+    [[ -f "$f" ]] || return 0
+    grep -q "gzip_static on;" "$f" && return 0
+    cp "$f" "$f.bak"
+    sed -i -e '/location \/static\/ {/a\        gzip_static on;' \
+           -e 's/expires 30d;/expires 365d;/' "$f"
+    if nginx -t >/dev/null 2>&1; then
+        systemctl reload nginx && ok "nginx now serves pre-compressed static files"
+        rm -f "$f.bak"
+    else
+        mv "$f.bak" "$f"
+        warn "nginx rejected the static-files patch — site file left unchanged"
+    fi
+}
+
 # ══════════════════════════════════════════════
 #  MENU: Update  (git pull + rebuild, keep DB & media)
 # ══════════════════════════════════════════════
@@ -224,7 +243,15 @@ menu_update() {
 
     info "Applying migrations..."
     $COMPOSE exec -T web python manage.py migrate --noinput 2>&1 | tail -3
-    $COMPOSE exec -T web python manage.py collectstatic --noinput >/dev/null 2>&1 || true
+
+    info "Collecting static files..."
+    if ! $COMPOSE exec -T web python manage.py collectstatic --noinput --clear --verbosity 0; then
+        fail "collectstatic failed — see the output above. The site may be missing CSS/JS."
+        pause; return
+    fi
+    # Gunicorn workers read staticfiles.json once at startup; restart so they load the new one.
+    $COMPOSE restart web >/dev/null 2>&1
+    patch_nginx_static
 
     if [[ "$(web_status)" == *running* ]]; then
         ok "Update complete — web is running"

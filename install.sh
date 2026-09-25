@@ -227,7 +227,10 @@ info "Running migrations..."
 $COMPOSE exec -T web python manage.py migrate --noinput 2>&1 | tail -4
 
 info "Collecting static files..."
-$COMPOSE exec -T web python manage.py collectstatic --noinput >/dev/null 2>&1 || true
+$COMPOSE exec -T web python manage.py collectstatic --noinput --clear --verbosity 0 \
+    || error "collectstatic failed — see the output above."
+# Gunicorn workers read staticfiles.json once at startup; restart so they load the new one.
+$COMPOSE restart web >/dev/null 2>&1
 
 info "Creating admin superuser..."
 $COMPOSE exec -T \

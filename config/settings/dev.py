@@ -11,5 +11,10 @@ DATABASES = {
     }
 }
 
-# Dev: use Tailwind CDN — no build step needed
-# STATICFILES_STORAGE is NOT overridden; whitenoise still serves /static/
+# runserver and pytest use plain storage: tests run with DEBUG=False, and the
+# Manifest storage needs a collected staticfiles.json to resolve {% static %}.
+# tests/test_static.py exercises the real Manifest storage explicitly.
+STORAGES = {
+    **STORAGES,
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+}

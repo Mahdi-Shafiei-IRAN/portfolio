@@ -5,9 +5,19 @@ server {
 
     client_max_body_size 25M;
 
+    # Compress proxied HTML/JSON on the fly.
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
     location /static/ {
         alias __INSTALL_DIR__/staticfiles/;
-        expires 30d;
+        # WhiteNoise's Manifest storage writes content-hashed names plus .gz
+        # copies: serve the .gz directly and cache for a year (names change
+        # whenever the content does).
+        gzip_static on;
+        expires 365d;
         add_header Cache-Control "public, immutable";
     }
 
