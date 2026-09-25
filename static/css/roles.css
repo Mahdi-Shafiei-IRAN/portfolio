@@ -59,3 +59,105 @@
 .project-links a { text-decoration: none; }
 .project-links a:hover { color: var(--accent-dark); }
 .project-empty { border-style: dashed; }
+
+/* ---------- Role header badge (all role pages) ---------- */
+.page-role .logo {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--font-body);
+    font-size: .95rem;
+    letter-spacing: .06em;
+    line-height: 1;
+}
+.page-role .logo::before { content: ''; width: 14px; height: 14px; background: var(--accent); }
+
+/* ---------- Theme: backend (terminal) ---------- */
+.theme-backend { --bg: #f3f4f8; --card: #ffffff; --term: #1f9d63; }
+:root[data-theme='dark'] .theme-backend { --bg: #0f1115; --card: #171a21; --line: #2a2f3a; --term: #3ddc97; }
+.theme-backend .role-title { font-family: var(--font-body); font-weight: 500; letter-spacing: .02em; }
+.theme-backend .prompt { color: var(--term); margin-right: .2em; }
+.theme-backend .block-cursor {
+    display: inline-block;
+    width: .5em;
+    height: .82em;
+    margin-left: .08em;
+    vertical-align: -.04em;
+    background: var(--term);
+    animation: blink 1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+.theme-backend .project-card { border-radius: 6px; box-shadow: 0 2px 10px rgba(15, 17, 21, .06); }
+.theme-backend .project-card:hover { border-color: var(--term); }
+.theme-backend .project-date { color: var(--term); }
+
+/* ---------- Theme: devops (industrial harbor) ---------- */
+.theme-devops {
+    --bg: #f2f1ee;
+    --card: #ffffff;
+    background-image: radial-gradient(circle, rgba(31, 30, 27, .18) 1.2px, transparent 1.4px);
+    background-size: 22px 22px;
+}
+:root[data-theme='dark'] .theme-devops {
+    --bg: #141412;
+    --card: #1c1c19;
+    background-image: radial-gradient(circle, rgba(233, 232, 236, .12) 1.2px, transparent 1.4px);
+}
+.theme-devops .role-title {
+    font-family: 'Archivo', var(--font-head);
+    font-stretch: 125%;
+    font-weight: 800;
+    font-size: clamp(2.6rem, 11vw, 8.5rem);
+    line-height: .88;
+    text-transform: uppercase;
+}
+.theme-devops .arrow { font-size: .45em; vertical-align: middle; color: var(--accent); }
+.theme-devops .btn { border-radius: 0; }
+.theme-devops .project-card { border: 2px solid var(--ink); border-radius: 0; }
+.theme-devops .role-hero::after {           /* hazard stripe along the bottom of the hero */
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 10px;
+    background: repeating-linear-gradient(-45deg, var(--accent) 0 14px, var(--ink) 14px 28px);
+}
+
+/* ---------- Theme: network (blueprint; dark in both modes) ---------- */
+.theme-network {
+    --bg: #0b1f3a;
+    --ink: #dbeafe;
+    --muted: #93b4d8;
+    --line: rgba(94, 234, 212, .35);
+    --card: rgba(11, 31, 58, .75);
+    --accent: #5eead4;
+    --accent-dark: #5eead4;
+    color-scheme: dark;
+    background-image:
+        linear-gradient(rgba(94, 234, 212, .10) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(94, 234, 212, .10) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+.theme-network .role-title {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: clamp(2.4rem, 10vw, 6.5rem);
+    letter-spacing: .1em;
+}
+.theme-network .net-node {
+    display: inline-block;
+    width: .32em;
+    height: .32em;
+    margin-left: .25em;
+    vertical-align: .12em;
+    border: 3px solid var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 0 .18em rgba(94, 234, 212, .15);
+}
+.theme-network .role-hero { border-bottom: 1px dashed var(--line); }
+.theme-network .project-card { border-style: dashed; }
+.theme-network .btn-solid { background: var(--accent); border-color: var(--accent); color: #0b1f3a; }

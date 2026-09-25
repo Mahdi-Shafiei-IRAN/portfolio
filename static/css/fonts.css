@@ -34,3 +34,11 @@
     font-display: swap;
     src: url('../fonts/gochi-hand-400.woff2') format('woff2');
 }
+@font-face {
+    font-family: 'Archivo';
+    font-style: normal;
+    font-weight: 100 900;
+    font-stretch: 62% 125%;
+    font-display: swap;
+    src: url('../fonts/archivo-wdth.woff2') format('woff2');
+}
