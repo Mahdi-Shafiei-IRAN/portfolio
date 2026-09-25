@@ -137,7 +137,12 @@ img { max-width: 100%; height: auto; }
     visibility: hidden;
     transition: opacity .35s, visibility .35s;
 }
-body.menu-open .site-menu { transform: none; visibility: visible; }
+body.menu-open .site-menu {
+    transform: none;
+    visibility: visible;
+    /* visible at once when opening, so site.js can move focus into the menu */
+    transition: transform .35s cubic-bezier(.22, 1, .36, 1), visibility 0s;
+}
 body.menu-open .menu-scrim { opacity: 1; visibility: visible; }
 
 /* ---------- Footer ---------- */
