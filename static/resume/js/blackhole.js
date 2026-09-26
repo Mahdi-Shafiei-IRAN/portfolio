@@ -407,8 +407,7 @@ const overlay = wrapper && wrapper.querySelector('.bg-overlay');
 function start() {
     const cpuCores = navigator.hardwareConcurrency || 8;
     const deviceMemory = navigator.deviceMemory || 8;
-    const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-    const isLowPowerDevice = coarsePointer || cpuCores <= 4 || deviceMemory <= 4;
+    const isLowPowerDevice = cpuCores <= 4 || deviceMemory <= 4;
 
     let renderer;
     try {
@@ -580,17 +579,13 @@ function start() {
     canvas.addEventListener('pointerdown', () => { if (interactive) canvas.style.cursor = 'grabbing'; });
     window.addEventListener('pointerup', () => { if (interactive) canvas.style.cursor = 'grab'; });
 
-    // The raymarcher runs per pixel and is by far the heaviest thing on the page.
-    // It renders below native resolution (the image is soft anyway) and steps down
-    // further while frames run long, so scrolling and the cursor stay smooth.
-    const DPR_LEVELS = isLowPowerDevice ? [0.55, 0.45, 0.35] : [0.85, 0.7, 0.55, 0.45];
-    let dprLevel = 0;
-
     const dbSize = new THREE.Vector2();
     const handleResize = () => {
         const w = window.innerWidth;
         const h = window.innerHeight;
-        const dpr = Math.min(window.devicePixelRatio || 1, DPR_LEVELS[dprLevel]);
+        // The shader runs per pixel: cap the resolution (lower on weak devices).
+        const qualityDpr = isLowPowerDevice ? 0.7 : 1.0;
+        const dpr = Math.min(window.devicePixelRatio || 1, qualityDpr);
         renderer.setPixelRatio(dpr);
         renderer.setSize(w, h, false);
         composer.setPixelRatio(dpr);
@@ -608,60 +603,14 @@ function start() {
     let lastRenderMs = 0;
     let frameId;
 
-    // Adaptive quality, measured in windows of 60 frames or 2 s: drop one
-    // resolution level when frames run late (over 18 in a window, or 30% of a short
-    // one) or three in a row crawl past 250 ms. Each drop is a probe: if the next
-    // window is not clearly faster, the GPU wasn't the bottleneck (e.g. the browser
-    // caps rAF at 30 Hz on battery), so the level is restored and adapting stops.
-    // The load-time intro and the first frame after a pause are not timed.
-    let lastTickMs = 0;
-    let sampled = 0;
-    let late = 0;
-    let crawling = 0;
-    let gapSum = 0;
-    let probeFrom = 0;   // average gap before the last drop; 0 = not probing
-    let frozen = false;
-    const adaptQuality = (now, budgetMs) => {
-        const gap = lastTickMs ? now - lastTickMs : 0;
-        lastTickMs = now;
-        if (!gap || frozen || now - initTime < 4000) return;
-        sampled += 1;
-        gapSum += gap;
-        if (gap > budgetMs * 1.6) late += 1;
-        crawling = gap > 250 ? crawling + 1 : 0;
-        const windowDone = sampled >= 60 || gapSum >= 2000;
-        const tooSlow = late > 18 || crawling >= 3 || (windowDone && late > sampled * 0.3);
-        if (probeFrom) {
-            if (!windowDone) return;
-            if (gapSum / sampled > probeFrom * 0.85) {
-                dprLevel -= 1;
-                handleResize();
-                frozen = true;
-            }
-            probeFrom = 0;
-        } else if (tooSlow && dprLevel < DPR_LEVELS.length - 1) {
-            probeFrom = gapSum / sampled;
-            dprLevel += 1;
-            handleResize();
-        } else if (!windowDone) {
-            return;
-        }
-        sampled = late = crawling = gapSum = 0;
-    };
-
     const tick = () => {
         frameId = requestAnimationFrame(tick);
         // Past the hero (or hidden tab) the raymarcher idles at 0% GPU.
         const heroVisible = window.scrollY < window.innerHeight * 1.05;
-        if ((!heroVisible && !interactive) || document.hidden) {
-            lastTickMs = 0;
-            return;
-        }
+        if ((!heroVisible && !interactive) || document.hidden) return;
 
         const now = performance.now();
         const elapsed = (now - initTime) * 0.001;
-        const minFrameMs = interactive ? 16 : (isLowPowerDevice ? 28 : 16);
-        adaptQuality(now, minFrameMs);
 
         if (interactive) {
             controls.update();
@@ -686,6 +635,7 @@ function start() {
         uniforms.uCamTarget.value.set(0, 0, 0);
         compositePass.uniforms.uTime.value = elapsed;
 
+        const minFrameMs = interactive ? 16 : (isLowPowerDevice ? 28 : 16);
         if (now - lastRenderMs >= minFrameMs) {
             bloomPass.enabled = halfFloatOK && interactive;
             composer.render();

@@ -3921,24 +3921,3 @@ header.hero-container {
   70% { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
-
-/* ===== phone performance =====
-   Every blur above is redrawn each frame over the animated starfield and black
-   hole, which made scrolling stutter on phones. The panels are already mostly
-   opaque, so on touch screens they drop the blur and firm up instead. */
-@media (pointer: coarse) {
-  *,
-  *::before,
-  *::after {
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-  }
-
-  nav.dock-mode {
-    background: rgba(8, 8, 8, 0.92);
-  }
-
-  .project-modal-overlay {
-    background: rgba(0, 0, 0, 0.88);
-  }
-}

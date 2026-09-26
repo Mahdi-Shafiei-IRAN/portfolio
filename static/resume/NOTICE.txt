@@ -15,9 +15,7 @@ Modifications made for this site:
 - The contact form stores messages in the site's database instead of calling
   the Resend email API; the WhatsApp link was removed.
 - Timeline visualizers redrawn for Mahdi's stages in the same canvas style.
-- The Three.js black-hole shaders (GLSL) are used unchanged. The hero renders
-  them below native resolution and lowers it further on slow devices; the
-  starfield skips MSAA and draws fewer stars on phones.
+- The Three.js black-hole shaders (GLSL) are used unchanged.
 - Cursor hover styles are set as classes from JavaScript instead of
   body:has(...:hover) selectors; pull-to-refresh is disabled on the page root.
 

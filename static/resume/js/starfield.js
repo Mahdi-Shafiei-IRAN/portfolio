@@ -39,8 +39,7 @@ const canvas = document.getElementById('three-starfield-canvas');
 function start() {
     let renderer;
     try {
-        // Points need no MSAA; skipping it saves a full-screen resolve every frame.
-        renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+        renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     } catch (e) {
         console.warn('WebGL unavailable — starfield disabled.', e);
         return;
@@ -50,12 +49,10 @@ function start() {
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
     camera.position.z = 1000;
-    // Phones: native resolution and half the stars keep scrolling smooth.
-    const coarse = window.matchMedia('(pointer: coarse)').matches;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, coarse ? 1 : 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    const starCount = coarse ? 2500 : 5000;
+    const starCount = 5000;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(starCount * 3);
     const colors = new Float32Array(starCount * 3);
