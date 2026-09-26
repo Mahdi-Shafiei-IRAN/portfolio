@@ -1,0 +1,108 @@
+/* The wormhole between the doodle site and the resume: entry points, the
+   swallow-into-the-black-hole exit and the spiral-back-out return. */
+
+/* ---------- Entry points ---------- */
+.header-actions { display: flex; align-items: center; gap: 14px; }
+
+.wormhole-btn {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #000;
+    box-shadow: 0 0 0 2px var(--ink), 0 0 12px 1px rgba(245, 160, 69, 0.55);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.wormhole-btn::before {                       /* the accretion ring */
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0 20%, var(--accent) 35%, transparent 55%, var(--accent-dark) 80%, transparent);
+    -webkit-mask: radial-gradient(circle, transparent 58%, #000 60%);
+            mask: radial-gradient(circle, transparent 58%, #000 60%);
+    animation: wormhole-spin 3.2s linear infinite;
+}
+.wormhole-btn:hover { transform: scale(1.12); box-shadow: 0 0 0 2px var(--ink), 0 0 20px 4px rgba(245, 160, 69, 0.7); }
+@keyframes wormhole-spin { to { transform: rotate(360deg); } }
+
+.wormhole-link {
+    position: relative;
+    z-index: 2;
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+.wormhole-link span { color: var(--ink); border-bottom: 2px solid var(--accent); }
+.js .landing .wormhole-link { opacity: 0; visibility: hidden; transition: opacity 0.35s 0.1s, visibility 0.35s; }
+.js .landing.scrolled .wormhole-link { opacity: 1; visibility: visible; }
+
+.btn-wormhole .wormhole-dot {
+    width: 0.8em;
+    height: 0.8em;
+    border-radius: 50%;
+    background: #000;
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* ---------- Leaving: the page is swallowed ---------- */
+.wormhole-disc {
+    position: fixed;
+    z-index: 9999;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border-radius: 50%;
+    background: #000;
+    box-shadow: 0 0 0 2px rgba(245, 160, 69, 0.9), 0 0 30px 10px rgba(245, 160, 69, 0.45);
+    transform: scale(0);
+    transition: transform 1.1s cubic-bezier(0.7, 0, 0.84, 0);
+    pointer-events: none;
+}
+.wormhole-leaving .wormhole-disc { transform: scale(220); }
+
+.wormhole-leaving main,
+.wormhole-leaving .site-header,
+.wormhole-leaving .site-footer {
+    transform: rotate(540deg) scale(0.04);
+    filter: blur(8px);
+    opacity: 0;
+    transition: transform 1.1s cubic-bezier(0.6, 0, 0.9, 0.4), filter 1.1s ease-in, opacity 1s ease-in;
+}
+.wormhole-leaving .theme-toggle,
+.wormhole-leaving .scrollbar { opacity: 0; transition: opacity 0.4s; }
+
+/* ---------- Returning: spiral back out of the dark ---------- */
+.wormhole-returning main,
+.wormhole-returning .site-header {
+    transform: rotate(-540deg) scale(0.04);
+    transform-origin: 50vw 50vh;
+    filter: blur(8px);
+    opacity: 0;
+}
+.wormhole-returning body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: #000;
+    pointer-events: none;
+}
+.wormhole-returning.wormhole-returning-go main,
+.wormhole-returning.wormhole-returning-go .site-header {
+    transform: none;
+    filter: none;
+    opacity: 1;
+    transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1), filter 1.1s ease-out, opacity 0.9s ease-out;
+}
+.wormhole-returning.wormhole-returning-go body::after {
+    opacity: 0;
+    transition: opacity 0.9s ease-out;
+}
+
+/* ---------- Reduced motion: a plain fade ---------- */
+.wormhole-fade main,
+.wormhole-fade .site-header,
+.wormhole-fade .site-footer { opacity: 0; transition: opacity 0.25s; }

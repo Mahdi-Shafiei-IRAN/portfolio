@@ -13,6 +13,7 @@
     <div class="role-actions">
         {% if city_enabled %}<a class="btn btn-solid" href="/city/?spawn={{ role_key }}">🎮 Enter the city</a>{% endif %}
         <a class="btn" href="#projects">See projects</a>
+        <a class="btn btn-wormhole" href="{% url 'resume:hero' %}" data-wormhole><span class="wormhole-dot" aria-hidden="true"></span> Full resume</a>
     </div>
     <a class="scroll-cue" href="#projects" aria-label="Scroll to projects">&#8964;</a>
 </section>

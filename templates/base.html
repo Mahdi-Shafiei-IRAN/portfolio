@@ -10,6 +10,13 @@
         (function () {
             var d = document.documentElement, t = null;
             d.classList.add('js');
+            try {
+                /* Coming back out of the resume's wormhole: start swallowed (wormhole.js spirals out). */
+                if (sessionStorage.getItem('wormhole-returning') &&
+                    !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    d.classList.add('wormhole-returning');
+                }
+            } catch (e) {}
             try { t = localStorage.getItem('theme'); } catch (e) {}
             if (t !== 'light' && t !== 'dark') {
                 t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -20,14 +27,19 @@
     <link rel="preload" href="{% static 'fonts/dm-mono-400.woff2' %}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
     <link rel="stylesheet" href="{% static 'css/site.css' %}">
+    <link rel="stylesheet" href="{% static 'css/wormhole.css' %}">
     {% block page_css %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
     <header class="site-header">
         <a class="logo" href="{% url 'core:home' %}" aria-label="{{ site.name }} — home"><span>MAHDI</span><span>SHAFIEI</span></a>
-        <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu">
-            <span></span><span></span><span></span>
-        </button>
+        <div class="header-actions">
+            <a class="wormhole-btn" href="{% url 'resume:hero' %}" data-wormhole
+               aria-label="Jump through the black hole into the resume" title="Jump into the resume"></a>
+            <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
     </header>
 
     <nav id="site-menu" class="site-menu" aria-label="Main">
@@ -37,6 +49,7 @@
         {% if city_enabled %}<a href="/city/">Backend City</a>{% endif %}
         <a href="{% url 'core:about' %}">About</a>
         <a href="{% url 'core:contact' %}">Contact</a>
+        <a href="{% url 'resume:hero' %}" data-wormhole>Resume</a>
     </nav>
     <div class="menu-scrim"></div>
 
@@ -58,6 +71,7 @@
     <div class="scrollbar" aria-hidden="true"><div class="scrollbar-thumb"></div></div>
 
     <script src="{% static 'js/site.js' %}" defer></script>
+    <script src="{% static 'js/wormhole.js' %}" defer></script>
     {% block page_js %}{% endblock %}
 </body>
 </html>

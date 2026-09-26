@@ -96,3 +96,23 @@ def test_contact_page_lists_links(client):
     assert f'mailto:{content.CONTACT["email"]}' in html
     assert content.CONTACT['github'] in html
     assert content.CONTACT['linkedin'] in html
+
+
+# --- wormhole entry points (doodle side) ---------------------------------------
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('url', ['/', '/backend/', '/about/', '/contact/'])
+def test_every_doodle_page_opens_the_wormhole(client, url):
+    html = client.get(url).content.decode()
+    assert html.count('href="/resume/" data-wormhole') >= 2     # header button + menu item
+    assert 'js/wormhole.js' in html and 'css/wormhole.css' in html
+
+
+@pytest.mark.django_db
+def test_landing_offers_the_no_time_shortcut(client):
+    assert 'No time to play?' in client.get('/').content.decode()
+
+
+@pytest.mark.django_db
+def test_role_page_has_full_resume_button(client):
+    assert 'Full resume' in client.get('/devops/').content.decode()
