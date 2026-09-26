@@ -94,6 +94,8 @@ Type `portfolio` on the server for a menu:
 - Add projects: `https://<domain>/admin/projects/project/` — set each one's
   **category** (Backend / DevOps / Network) to choose its role page.
 - Add a resume: commit `static/resume.pdf`, then `portfolio` → Update.
+- Read messages sent from the resume's contact form:
+  `https://<domain>/admin/resume/contactmessage/`.
 
 ## Notes
 
