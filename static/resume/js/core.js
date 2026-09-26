@@ -332,6 +332,8 @@
             return;
         }
         body.style.overflow = 'hidden';
+        // Mark it as seen right away: leaving mid-way must not replay it on the next page.
+        try { if (store) store.setItem('preloaderDone', 'true'); } catch (e) { /* storage blocked */ }
         const bar = pre.querySelector('.loader-bar');
         const pct = pre.querySelector('.preloader-pct');
         const start = performance.now();
@@ -347,7 +349,6 @@
                 pre.style.opacity = '0';
                 pre.style.pointerEvents = 'none';
                 setTimeout(() => {
-                    try { if (store) store.setItem('preloaderDone', 'true'); } catch (e) { /* storage blocked */ }
                     pre.remove();
                     body.style.overflow = '';
                     body.style.overflowX = 'hidden';

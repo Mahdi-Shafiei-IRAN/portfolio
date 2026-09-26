@@ -8,7 +8,10 @@ from django.core.management import call_command
 
 from config.settings import base
 
-PAGES = ['/', '/backend/', '/devops/', '/network/', '/about/', '/contact/']
+PAGES = [
+    '/', '/backend/', '/devops/', '/network/', '/about/', '/contact/',
+    '/resume/', '/resume/about/', '/resume/work/', '/resume/skills/', '/resume/contact/',
+]
 
 
 @pytest.fixture
@@ -36,7 +39,9 @@ def test_collectstatic_hashes_and_compresses(manifest_static):
 def test_pages_render_with_manifest_storage(manifest_static, client, url):
     response = client.get(url)
     assert response.status_code == 200
-    assert re.search(r'/static/css/site\.[0-9a-f]{12}\.css', response.content.decode())
+    html = response.content.decode()
+    # Doodle pages load css/site.css, resume pages resume/css/resume.css — both hashed.
+    assert re.search(r'/static/(css/site|resume/css/resume)\.[0-9a-f]{12}\.css', html)
 
 
 def _bytes(root, exclude=None):

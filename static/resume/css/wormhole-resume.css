@@ -52,6 +52,17 @@
 /* Projects without screenshots: let the case study use the full modal width. */
 .project-modal-body.no-gallery { grid-template-columns: 1fr; }
 
+/* Phones: long stack lines and the wide 3D stages must not widen the page
+   (mobile browsers grow the layout viewport instead of clipping). */
+.telemetry-grid > * { min-width: 0; }
+.telemetry-meta-row { flex-wrap: wrap; }
+.telemetry-card { overflow-wrap: anywhere; }
+.skills-page-section,
+.timeline-section {
+    overflow-x: hidden;   /* fallback */
+    overflow-x: clip;
+}
+
 /* Contact monolith: only the current state (idle / launching / sent) shows. */
 .cosmic-monolith-card [data-state][hidden],
 .form-status-msg[hidden] { display: none !important; }
