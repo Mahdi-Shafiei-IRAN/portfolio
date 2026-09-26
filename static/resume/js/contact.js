@@ -120,7 +120,10 @@
                 }, 300))
                 .catch((err) => setTimeout(() => {
                     setState('idle');
-                    setStatus(err.message);
+                    // fetch() itself rejects with a TypeError when the network is down.
+                    setStatus(err instanceof TypeError
+                        ? 'Network error — please try again or use Copy Email.'
+                        : err.message);
                 }, 500));
         };
         requestAnimationFrame(step);

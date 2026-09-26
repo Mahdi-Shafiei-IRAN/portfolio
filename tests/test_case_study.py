@@ -57,6 +57,14 @@ def test_gallery_ordered_and_falls_back_to_image(settings, tmp_path):
 
 
 @pytest.mark.django_db
+def test_case_study_links_are_web_only():
+    p = make(live_url='javascript:alert(1)', github_url='https://github.com/u/x')
+    p.save()
+    assert p.case_study['liveUrl'] == ''
+    assert p.case_study['githubUrl'] == 'https://github.com/u/x'
+
+
+@pytest.mark.django_db
 def test_case_study_payload_keys():
     p = make(tagline='T', problem='P', live_url='https://x.dev')
     p.save()

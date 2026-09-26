@@ -14,7 +14,11 @@
             var d = document.documentElement, s = null;
             try { s = window.sessionStorage; } catch (e) {}
             var arriving = s && s.getItem('wormhole-entering');
-            if (arriving) d.classList.add('wormhole-arriving');
+            if (arriving) {
+                d.classList.add('wormhole-arriving');
+                /* Safety net: never leave the page black if core.js fails to load. */
+                setTimeout(function () { d.classList.remove('wormhole-arriving'); }, 2500);
+            }
             if (arriving || (s && s.getItem('preloaderDone') === 'true') ||
                 window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                 d.classList.add('no-preloader');

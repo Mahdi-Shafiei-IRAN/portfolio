@@ -48,6 +48,13 @@ def test_sync_creates_project_with_category_and_start_date():
 
 
 @pytest.mark.django_db
+def test_sync_keeps_only_web_homepages():
+    sync_repos([repo('good', homepage='https://good.dev'), repo('bad', homepage='javascript:alert(1)')])
+    assert Project.objects.get(title='Good').live_url == 'https://good.dev'
+    assert Project.objects.get(title='Bad').live_url == ''
+
+
+@pytest.mark.django_db
 def test_sync_skips_forks_private_and_skip_list():
     sync_repos([repo('forked', fork=True), repo('secret', private=True), repo('portfolio')])
     assert Project.objects.count() == 0

@@ -18,7 +18,7 @@ from datetime import date
 
 from django.core.management.base import BaseCommand
 
-from apps.projects.models import Project
+from apps.projects.models import Project, web_url
 
 SKIP = {"portfolio", "test", "mahdi-shafiei-iran"}
 
@@ -72,8 +72,9 @@ def sync_repos(repos):
         defaults = {
             "description": desc,
             "tech_stack": tech,
-            "github_url": repo.get("html_url", ""),
-            "live_url": repo.get("homepage") or "",
+            "github_url": web_url(repo.get("html_url")),
+            # The repo "homepage" is free text on GitHub: keep only real web links.
+            "live_url": web_url(repo.get("homepage")),
             "order": order,
             "is_featured": (repo.get("stargazers_count", 0) or 0) >= 1,
         }

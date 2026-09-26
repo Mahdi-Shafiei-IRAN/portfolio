@@ -10,6 +10,12 @@ def _cells(line, count):
     return (parts + [''] * count)[:count]
 
 
+def web_url(value):
+    """Only http(s) URLs may become links; anything else (e.g. 'javascript:') becomes ''."""
+    value = (value or '').strip()
+    return value if value.lower().startswith(('http://', 'https://')) else ''
+
+
 class Project(models.Model):
     class Category(models.TextChoices):
         BACKEND = 'backend', 'Backend'
@@ -108,7 +114,7 @@ class Project(models.Model):
             'techStack': self.tech_list, 'features': self.features_list,
             'architectureFlow': self.architecture_steps, 'architectureDetails': self.decisions_list,
             'metrics': self.metrics_list, 'images': self.gallery_urls,
-            'githubUrl': self.github_url, 'liveUrl': self.live_url,
+            'githubUrl': web_url(self.github_url), 'liveUrl': web_url(self.live_url),
         }
 
 
