@@ -1,6 +1,15 @@
 from django.db import models
 
 
+def _lines(text):
+    return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+def _cells(line, count):
+    parts = [p.strip() for p in line.split('|')]
+    return (parts + [''] * count)[:count]
+
+
 class Project(models.Model):
     class Category(models.TextChoices):
         BACKEND = 'backend', 'Backend'
@@ -27,6 +36,16 @@ class Project(models.Model):
     is_featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Case study shown in the resume's project modal. Plain text keeps the admin simple.
+    tagline = models.CharField(max_length=200, blank=True, default='')
+    problem = models.TextField(blank=True, default='', help_text='"The Engineering Challenge" paragraph.')
+    features = models.TextField(blank=True, default='', help_text='One feature per line.')
+    architecture = models.TextField(
+        blank=True, default='', help_text='One step per line: Title | Tech | Description',
+    )
+    decisions = models.TextField(blank=True, default='', help_text='One per line: Title | Description')
+    metrics = models.TextField(blank=True, default='', help_text='One per line: Label | Value')
+
     class Meta:
         ordering = ['order']
 
@@ -46,3 +65,60 @@ class Project(models.Model):
         start = self.started_on.strftime('%b %Y').upper()
         end = self.ended_on.strftime('%b %Y').upper() if self.ended_on else 'PRESENT'
         return f'{start} – {end}'
+
+    @property
+    def features_list(self):
+        return _lines(self.features)
+
+    @property
+    def architecture_steps(self):
+        steps = []
+        for i, line in enumerate(_lines(self.architecture), start=1):
+            title, tech, desc = _cells(line, 3)
+            steps.append({'step': f'{i:02d}', 'title': title, 'tech': tech, 'desc': desc})
+        return steps
+
+    @property
+    def decisions_list(self):
+        return [dict(zip(('title', 'desc'), _cells(line, 2))) for line in _lines(self.decisions)]
+
+    @property
+    def metrics_list(self):
+        return [dict(zip(('label', 'value'), _cells(line, 2))) for line in _lines(self.metrics)]
+
+    @property
+    def gallery_urls(self):
+        """Gallery images in order; the cover image alone when there is no gallery."""
+        urls = [img.image.url for img in self.gallery.all() if img.image]
+        if not urls and self.image:
+            urls = [self.image.url]
+        return urls
+
+    @property
+    def card_category(self):
+        """Resume card eyebrow, e.g. 'DEVOPS • PYTHON • DJANGO'."""
+        return ' • '.join([self.get_category_display(), *self.tech_list[:2]]).upper()
+
+    @property
+    def case_study(self):
+        """JSON-ready payload for the resume's project modal."""
+        return {
+            'title': self.title, 'tagline': self.tagline, 'category': self.card_category,
+            'description': self.description, 'problem': self.problem,
+            'techStack': self.tech_list, 'features': self.features_list,
+            'architectureFlow': self.architecture_steps, 'architectureDetails': self.decisions_list,
+            'metrics': self.metrics_list, 'images': self.gallery_urls,
+            'githubUrl': self.github_url, 'liveUrl': self.live_url,
+        }
+
+
+class ProjectImage(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='gallery')
+    image = models.ImageField(upload_to='projects/gallery/')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f'{self.project.title} #{self.order}'
