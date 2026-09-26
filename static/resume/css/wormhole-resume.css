@@ -49,6 +49,9 @@
     .wormhole-back { display: none; }       /* the mobile drawer has a "Sketchbook" item */
 }
 
+/* Projects without screenshots: let the case study use the full modal width. */
+.project-modal-body.no-gallery { grid-template-columns: 1fr; }
+
 @media (prefers-reduced-motion: reduce) {
     .wormhole-curtain { transition-duration: 0.2s; }
 }

@@ -72,6 +72,41 @@ def test_about_has_journey_activity_and_visualizers(client):
     assert 'img/profile.jpg' in html
 
 
+def _projects_json(html):
+    import json
+    import re
+    match = re.search(r'<script id="projects-data" type="application/json">(.*?)</script>', html, re.S)
+    return json.loads(match.group(1))
+
+
+@pytest.mark.django_db
+def test_work_lists_projects_with_case_study_json(client):
+    from apps.projects.models import Project
+    Project.objects.create(title='Alpha', description='d', tech_stack='Python, Django', category='devops',
+                           features='Fast', live_url='https://a.dev', order=1)
+    Project.objects.create(title='Beta', description='d', tech_stack='Bash', order=2)
+    html = client.get('/resume/work/').content.decode()
+    assert 'Alpha' in html and 'Beta' in html
+    assert 'DEVOPS • PYTHON • DJANGO' in html
+    data = _projects_json(html)
+    assert [p['title'] for p in data] == ['Alpha', 'Beta']
+    assert data[0]['features'] == ['Fast'] and data[0]['liveUrl'] == 'https://a.dev'
+
+
+@pytest.mark.django_db
+def test_work_empty_state(client):
+    assert 'Projects landing soon' in client.get('/resume/work/').content.decode()
+
+
+@pytest.mark.django_db
+def test_work_json_cannot_break_out_of_script(client):
+    from apps.projects.models import Project
+    Project.objects.create(title='</script><script>alert(1)</script>', description='d', tech_stack='x')
+    html = client.get('/resume/work/').content.decode()
+    assert '</script><script>alert(1)' not in html
+    assert _projects_json(html)[0]['title'] == '</script><script>alert(1)</script>'
+
+
 @pytest.mark.django_db
 def test_resume_pdf_buttons_follow_file(client, monkeypatch):
     monkeypatch.setattr('apps.resume.views.finders.find', lambda path: None)

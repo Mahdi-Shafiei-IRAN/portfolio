@@ -1,8 +1,39 @@
 {% extends 'resume/base.html' %}
-{% load resume_tags %}
+{% load static resume_tags %}
+
+{% block title %}Work — {{ resume.full_name }}{% endblock %}
 
 {% block content %}
-<section id="work" class="container">
-    <div class="gsap-reveal">{% masked_title "Featured Work" "2." %}<div class="divider"></div></div>
+<section id="work" class="container work-page-section">
+    <div class="gsap-reveal work-header">
+        {% masked_title "Featured Work" "2." %}
+        <div class="divider"></div>
+    </div>
+
+    <div class="work-grid">
+        {% for project in projects %}
+        <div class="project-card hoverable gsap-work-card" role="button" tabindex="0"
+             data-project="{{ forloop.counter0 }}" aria-label="Open project: {{ project.title }}">
+            <div class="project-bg bg-{% cycle '3' '1' '2' %}"></div>
+            <div class="project-overlay"></div>
+            <div class="project-info">
+                <p class="font-mono project-category text-gray uppercase">{{ project.card_category }}</p>
+                <h3 class="project-title text-glow uppercase">{{ project.title }}</h3>
+            </div>
+        </div>
+        {% empty %}
+        <div class="project-card gsap-work-card">
+            <div class="project-bg bg-3"></div>
+            <div class="project-overlay"></div>
+            <div class="project-info">
+                <p class="font-mono project-category text-gray uppercase">In progress</p>
+                <h3 class="project-title text-glow uppercase">Projects landing soon</h3>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </section>
+{{ projects_json|json_script:"projects-data" }}
 {% endblock %}
+
+{% block page_js %}<script src="{% static 'resume/js/work.js' %}"></script>{% endblock %}
