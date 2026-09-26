@@ -33,6 +33,7 @@ html {
     scroll-behavior: smooth;
     scrollbar-width: none;              /* native bar hidden; the custom one is below */
 }
+html, body { overscroll-behavior-y: none; }   /* no pull-to-refresh reloads on phones */
 html::-webkit-scrollbar { display: none; }
 
 body {

@@ -10,9 +10,15 @@ upsert می‌شوند (github_url کلید یکتا نیست، پس با title 
 
 دسته (category) از روی topicهای ریپو حدس زده می‌شود و تاریخِ شروع از تاریخِ ساختِ
 ریپو می‌آید؛ هر دو فقط هنگامِ ساختِ ردیف تنظیم می‌شوند تا ویرایش‌های ادمین بمانند.
+
+در همگام‌سازیِ دوباره: لینک‌ها و ستاره (is_featured) از گیت‌هاب می‌آیند؛ توضیح فقط
+وقتی عوض می‌شود که خودِ ریپو توضیح داشته باشد؛ فهرستِ فناوری فقط وقتی که توضیحِ
+پروژه هنوز همان متنِ خودکار است؛ ترتیب (order) دست نمی‌خورد. پس متنی که در ادمین
+نوشته شده با sync پاک نمی‌شود.
 """
 
 import json
+import re
 import urllib.request
 from datetime import date
 
@@ -52,6 +58,14 @@ def fetch_repos(user, token=""):
         return json.load(r)
 
 
+def placeholder(lang):
+    """The description written for a repo that has none on GitHub."""
+    return f"A {lang} project." if lang else "A software project."
+
+
+PLACEHOLDER_RE = re.compile(r"^A (.+ )?project\.$")
+
+
 def sync_repos(repos):
     """Upsert Project rows from a GitHub repos payload. Returns (created, updated)."""
     created = updated = 0
@@ -66,30 +80,36 @@ def sync_repos(repos):
         lang = repo.get("language") or ""
         topics = repo.get("topics") or []
         desc = (repo.get("description") or "").strip()
-        if not desc:
-            desc = f"A {lang} project." if lang else "A software project."
         tech = ", ".join([t for t in [lang, *topics] if t]) or "Software"
-        defaults = {
-            "description": desc,
-            "tech_stack": tech,
-            "github_url": web_url(repo.get("html_url")),
-            # The repo "homepage" is free text on GitHub: keep only real web links.
-            "live_url": web_url(repo.get("homepage")),
-            "order": order,
-            "is_featured": (repo.get("stargazers_count", 0) or 0) >= 1,
-        }
-        _, was_created = Project.objects.update_or_create(
-            title=title,
-            defaults=defaults,
-            # Only applied when the row is created, so admin edits survive re-syncs.
-            create_defaults={
-                **defaults,
-                "category": guess_category(topics),
-                "started_on": parse_created(repo.get("created_at")),
-            },
-        )
-        created += was_created
-        updated += (not was_created)
+        # The repo "homepage" is free text on GitHub: keep only real web links.
+        homepage = web_url(repo.get("homepage"))
+        featured = (repo.get("stargazers_count", 0) or 0) >= 1
+
+        project = Project.objects.filter(title=title).first()
+        if project is None:
+            Project.objects.create(
+                title=title, description=desc or placeholder(lang), tech_stack=tech,
+                github_url=web_url(repo.get("html_url")), live_url=homepage,
+                order=order, is_featured=featured,
+                category=guess_category(topics), started_on=parse_created(repo.get("created_at")),
+            )
+            created += 1
+            continue
+
+        # Re-sync: GitHub owns the links, the star flag and its own description;
+        # text, order and category written in the admin survive.
+        untouched = not project.description or PLACEHOLDER_RE.match(project.description)
+        if desc:
+            project.description = desc
+        elif untouched:
+            project.description = placeholder(lang)
+        if untouched:
+            project.tech_stack = tech
+        project.github_url = web_url(repo.get("html_url"))
+        project.live_url = homepage or project.live_url
+        project.is_featured = featured
+        project.save()
+        updated += 1
     return created, updated
 
 

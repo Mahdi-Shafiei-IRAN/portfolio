@@ -68,3 +68,30 @@ def test_resync_keeps_edited_category_but_updates_description():
     p = Project.objects.get(title='Api Gateway')
     assert p.category == 'network'
     assert p.description == 'new text'
+
+
+@pytest.mark.django_db
+def test_resync_keeps_admin_text_order_and_live_url():
+    """Repos without a GitHub description get a placeholder; once the admin writes
+    real text (and picks an order and live link), a re-sync must not undo it."""
+    sync_repos([repo('karshar', description=None, homepage='')])
+    p = Project.objects.get(title='Karshar')
+    assert p.description == 'A Python project.'
+    Project.objects.filter(pk=p.pk).update(
+        description='A Django job board.', tech_stack='Django, PostgreSQL', order=7,
+        live_url='https://karshar.example')
+    sync_repos([repo('other'), repo('karshar', description=None, homepage='', topics=['django'])])
+    p.refresh_from_db()
+    assert p.description == 'A Django job board.'
+    assert p.tech_stack == 'Django, PostgreSQL'
+    assert p.order == 7
+    assert p.live_url == 'https://karshar.example'
+
+
+@pytest.mark.django_db
+def test_resync_refreshes_untouched_placeholder_projects():
+    sync_repos([repo('tool', description=None)])
+    sync_repos([repo('tool', description=None, language='Go', topics=['cli'])])
+    p = Project.objects.get(title='Tool')
+    assert p.description == 'A Go project.'
+    assert p.tech_stack == 'Go, cli'

@@ -118,11 +118,18 @@
         setInterval(moon, 3600000);
 
         let visible = false;
+        let lastTarget = null;
         window.addEventListener('mousemove', (e) => {
             if (!visible) { gsap.set(el, { opacity: 1 }); visible = true; }
             xTo(e.clientX);
             yTo(e.clientY);
-            el.classList.toggle('hovered', !!(e.target.closest && e.target.closest('.hoverable')));
+            // Restyle only when the element under the pointer changes.
+            const t = e.target;
+            if (t === lastTarget || !t.closest) return;
+            lastTarget = t;
+            el.classList.toggle('hovered', !!t.closest('.hoverable'));
+            el.classList.toggle('is-subtle', !!t.closest('nav, .hero-logo'));
+            el.classList.toggle('on-gallery', !!t.closest('.project-modal-gallery'));
         }, { passive: true });
         doc.addEventListener('mouseleave', () => { gsap.to(el, { opacity: 0, duration: 0.2 }); visible = false; });
         doc.addEventListener('mouseenter', () => { gsap.to(el, { opacity: 1, duration: 0.2 }); visible = true; });

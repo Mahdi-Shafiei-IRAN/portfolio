@@ -67,8 +67,16 @@
     thumb.addEventListener('pointerup', stopDrag);
     thumb.addEventListener('pointercancel', stopDrag);
 
-    window.addEventListener('scroll', paint, { passive: true });
-    window.addEventListener('resize', paint);
-    new ResizeObserver(paint).observe(body);
+    // At most one paint per frame: several scroll events can land in one frame,
+    // and each paint reads layout right after the previous one wrote it.
+    let queued = false;
+    const schedulePaint = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => { queued = false; paint(); });
+    };
+    window.addEventListener('scroll', schedulePaint, { passive: true });
+    window.addEventListener('resize', schedulePaint);
+    new ResizeObserver(schedulePaint).observe(body);
     paint();
 })();

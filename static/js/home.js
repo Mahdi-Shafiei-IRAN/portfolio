@@ -49,6 +49,9 @@
     function syncScrollState() {
         if (!typed || leaving) return;
         const scrolled = window.scrollY > SWITCH_AT;
+        // Touch the DOM only when the state flips: rewriting the heading on every
+        // scroll event forced a re-layout each time and made phones stutter.
+        if (scrolled === landing.classList.contains('scrolled')) return;
         landing.classList.toggle('scrolled', scrolled);
         typeEl.textContent = scrolled ? `${BASE} a` : BASE;
     }
