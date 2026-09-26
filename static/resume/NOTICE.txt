@@ -1,0 +1,24 @@
+The resume section of this site (templates/resume/, static/resume/) is a port of
+
+    DineshS36/portfolio — https://github.com/DineshS36/portfolio
+    commit 35c39891904ebb716d4c3e48b64cc724390f42c3
+    Copyright (c) DineshS36
+    Licensed under the Apache License, Version 2.0
+    (http://www.apache.org/licenses/LICENSE-2.0)
+
+Modifications made for this site:
+- React components rewritten as Django templates and vanilla JavaScript.
+- CSS files concatenated into css/resume.css; the Google Fonts import removed
+  and Inter / Space Mono self-hosted (css/fonts.css).
+- Content, contact details and projects replaced with Mahdi Shafiei's own;
+  projects and messages come from the Django database and admin.
+- The contact form stores messages in the site's database instead of calling
+  the Resend email API; the WhatsApp link was removed.
+- Timeline visualizers redrawn for Mahdi's stages in the same canvas style.
+- The Three.js black-hole shaders (GLSL) are used unchanged.
+
+Third-party libraries (self-hosted under static/vendor/):
+- three.js 0.184.0 — MIT License
+- GSAP 3.15.0 (gsap, Observer, ScrollTrigger) — GreenSock Standard License
+- Lenis 1.3.26 — MIT License
+- Inter, Space Mono — SIL Open Font License 1.1

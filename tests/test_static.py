@@ -39,8 +39,20 @@ def test_pages_render_with_manifest_storage(manifest_static, client, url):
     assert re.search(r'/static/css/site\.[0-9a-f]{12}\.css', response.content.decode())
 
 
+def _bytes(root, exclude=None):
+    return sum(p.stat().st_size for p in root.rglob('*')
+               if p.is_file() and not (exclude and exclude in p.parents))
+
+
 def test_static_source_stays_small():
-    """The old site shipped ~96 MB of video and frames under static/. Keep it lean."""
+    """The old site shipped ~96 MB of video and frames under static/. Keep our own assets lean."""
     root = Path(settings.BASE_DIR, 'static')
-    total = sum(p.stat().st_size for p in root.rglob('*') if p.is_file())
-    assert total < 800_000, f'static/ is {total:,} bytes'
+    total = _bytes(root, exclude=root / 'vendor')
+    assert total < 800_000, f'static/ (without vendor/) is {total:,} bytes'
+
+
+def test_vendor_stays_bounded():
+    """Self-hosted libraries (three.js, GSAP, Lenis) — raw size, before gzip."""
+    vendor = Path(settings.BASE_DIR, 'static', 'vendor')
+    total = _bytes(vendor)
+    assert total < 1_600_000, f'static/vendor/ is {total:,} bytes'
