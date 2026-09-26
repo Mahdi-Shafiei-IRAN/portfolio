@@ -1,11 +1,14 @@
 import json
 import re
+from pathlib import Path
 
 import pytest
+from PIL import Image
 
 from apps.city.lots import assign_lots
 from apps.core import content as site_content
 from apps.projects.models import Project
+from scripts import build_city_art, make_portrait
 
 
 def payload(html):
@@ -80,3 +83,48 @@ def test_city_links_are_live_now(client):
     html = client.get('/devops/').content.decode()
     assert '/city/?spawn=devops' in html and 'Enter the city' in html
     assert 'Backend City' in client.get('/').content.decode()
+
+
+# --- art ----------------------------------------------------------------------
+
+GAME = Path(__file__).resolve().parent.parent / 'static' / 'game'
+
+
+def test_art_is_built_and_small():
+    files = [GAME / 'img' / f'{name}.png' for name in ('tiles', 'chars', 'props', 'portrait')]
+    assert all(f.exists() for f in files)
+    assert sum(f.stat().st_size for f in files) < 500_000
+
+
+def test_atlas_entries_fit_the_props_sheet():
+    sheet = Image.open(GAME / 'img' / 'props.png')
+    entries = re.findall(r'(\w+): \{ x: (\d+), y: (\d+), w: (\d+), h: (\d+), frames: (\d+) \}',
+                         (GAME / 'js' / 'atlas.js').read_text(encoding='utf-8'))
+    names = {e[0] for e in entries}
+    assert {'water', 'shore', 'dock', 'ship', 'antenna', 'fountain', 'bubble'} <= names
+    for name, x, y, w, h, frames in entries:
+        x, y, w, h, frames = map(int, (x, y, w, h, frames))
+        assert x + w * frames <= sheet.width and y + h <= sheet.height, name
+
+
+def test_chars_sheet_is_one_row_of_people():
+    sheet = Image.open(GAME / 'img' / 'chars.png')
+    assert sheet.height == 16 and sheet.width == 16 * len(build_city_art.CHARACTERS)
+
+
+def test_pack_never_overlaps():
+    props = [(f'p{i}', [Image.new('RGBA', (w, h))] * n)
+             for i, (w, h, n) in enumerate([(48, 48, 1), (16, 16, 3), (96, 40, 1), (32, 16, 4), (16, 48, 2)])]
+    _, atlas = build_city_art.pack(props, width=128)
+    boxes = [(a['x'], a['y'], a['x'] + a['w'] * a['frames'], a['y'] + a['h']) for a in atlas.values()]
+    for i, a in enumerate(boxes):
+        assert a[2] <= 128
+        for b in boxes[i + 1:]:
+            assert a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1]
+
+
+def test_pixelate_limits_size_and_palette():
+    photo = Image.effect_noise((200, 200), 64).convert('RGB')
+    out = make_portrait.pixelate(photo, size=48, colours=24)
+    assert out.size == (96, 96)
+    assert len(out.convert('RGB').getcolors(10_000)) <= 24
