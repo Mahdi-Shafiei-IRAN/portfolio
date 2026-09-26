@@ -1,6 +1,8 @@
+from datetime import timedelta
+
 import pytest
-from django.core.cache import cache
 from django.test import Client
+from django.utils import timezone
 from django.utils.html import escape
 
 from apps.resume import content as resume_content
@@ -136,11 +138,6 @@ def test_resume_pdf_buttons_follow_file(client, monkeypatch):
     assert 'resume.pdf' in client.get('/resume/about/').content.decode()
 
 
-@pytest.fixture(autouse=True)
-def _clear_cache():
-    cache.clear()
-
-
 # --- contact endpoint --------------------------------------------------------
 
 @pytest.mark.django_db
@@ -172,6 +169,19 @@ def test_rate_limit_five_per_hour(client):
     r = client.post(SEND, {'name': 'A', 'message': 'one more'})
     assert r.status_code == 429 and r.json()['ok'] is False
     assert ContactMessage.objects.count() == 5
+
+
+@pytest.mark.django_db
+def test_rate_limit_ignores_old_messages_and_is_per_ip(client):
+    two_hours_ago = timezone.now() - timedelta(hours=2)
+    for _ in range(5):
+        old = ContactMessage.objects.create(name='A', message='old message', ip='127.0.0.1')
+        ContactMessage.objects.filter(pk=old.pk).update(created_at=two_hours_ago)
+    for i in range(5):                                   # the old five don't count
+        assert client.post(SEND, {'name': 'A', 'message': f'fresh {i}'}).status_code == 200
+    assert client.post(SEND, {'name': 'A', 'message': 'sixth'}).status_code == 429
+    other = client.post(SEND, {'name': 'B', 'message': 'from elsewhere'}, REMOTE_ADDR='10.0.0.9')
+    assert other.status_code == 200
 
 
 @pytest.mark.django_db

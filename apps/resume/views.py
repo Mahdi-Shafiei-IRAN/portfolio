@@ -1,6 +1,8 @@
+from datetime import timedelta
+
 from django.contrib.staticfiles import finders
-from django.core.cache import cache
 from django.http import JsonResponse
+from django.utils import timezone
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.views.generic import TemplateView
@@ -101,9 +103,9 @@ def send_message(request):
         return JsonResponse({'ok': False, 'error': f'{field}: {errors[0]}'}, status=400)
 
     ip = _client_ip(request)
-    key = f'resume-contact:{ip}'
-    cache.add(key, 0, RATE_WINDOW)
-    if cache.incr(key) > RATE_LIMIT:
+    # Counted in the database, so the limit holds across Gunicorn workers and restarts.
+    since = timezone.now() - timedelta(seconds=RATE_WINDOW)
+    if ip and ContactMessage.objects.filter(ip=ip, created_at__gte=since).count() >= RATE_LIMIT:
         return JsonResponse(
             {'ok': False, 'error': 'Too many messages — please use Copy Email instead.'}, status=429,
         )

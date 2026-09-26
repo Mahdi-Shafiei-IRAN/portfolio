@@ -528,7 +528,9 @@ function start() {
     // Orbit mode (double-click to enter, double-click or Esc to leave).
     let interactive = false;
     let badge = null;
+    let savedOverflow = '';
     const setInteractive = (next) => {
+        if (next === interactive) return;
         interactive = next;
         wrapper.classList.toggle('orbit-active', next);
         if (overlay) overlay.classList.toggle('orbit-active', next);
@@ -554,15 +556,23 @@ function start() {
             mouseY = 0;
             if (badge) { badge.remove(); badge = null; }
         }
-        // Wheel inside orbit mode zooms; keep it from also changing sections.
-        if (window.ResumeCore) { if (next) window.ResumeCore.stopLenis(); else window.ResumeCore.startLenis(); }
-        document.body.style.overflow = next ? 'hidden' : '';
+        // Wheel inside orbit mode zooms; lock scrolling (and section changes) meanwhile,
+        // then restore whatever lock was there before (e.g. an open mobile drawer).
+        const core = window.ResumeCore;
+        if (next) {
+            savedOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            if (core) core.stopLenis();
+        } else {
+            document.body.style.overflow = savedOverflow;
+            if (core && savedOverflow !== 'hidden') core.startLenis();
+        }
     };
 
     window.addEventListener('dblclick', (e) => {
         const t = e.target;
         if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.closest('a') || t.closest('button')
-            || t.closest('[role="button"]') || t.closest('.project-modal-backdrop')) return;
+            || t.closest('[role="button"]') || t.closest('.project-modal-backdrop') || t.closest('[data-drawer]')) return;
         setInteractive(!interactive);
     });
     window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && interactive) setInteractive(false); });
