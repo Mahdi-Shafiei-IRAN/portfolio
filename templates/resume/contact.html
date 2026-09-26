@@ -1,8 +1,134 @@
 {% extends 'resume/base.html' %}
-{% load resume_tags %}
+{% load static resume_tags %}
+
+{% block title %}Contact — {{ resume.full_name }}{% endblock %}
 
 {% block content %}
-<section id="contact" class="container">
-    <div class="gsap-reveal">{% masked_title "LET'S BUILD TOGETHER" "" %}<div class="divider"></div></div>
+<section id="contact" class="container contact-page-section">
+    <div class="contact-beacon-wrapper">
+        <div class="contact-header centered gsap-reveal">
+            <div class="beacon-eyebrow font-mono uppercase"><span>Get in Touch</span></div>
+            {% masked_title "LET'S BUILD TOGETHER" "" "section-title centered uppercase text-glow" %}
+            <div class="divider centered"></div>
+            <p class="contact-lead centered text-gray">{{ resume.contact_lead }}</p>
+        </div>
+
+        <div class="cosmic-monolith-card hoverable gsap-reveal font-mono" data-monolith
+             data-send-url="{% url 'resume:send' %}">
+            <div class="monolith-topbar">
+                <div class="beacon-status-pill"><span class="beacon-freq-text" data-pill>Quick Mail</span></div>
+                <span class="monolith-title uppercase" data-title>Direct Message</span>
+            </div>
+
+            {# 1. Launching: rocket flight + 0–100% counter #}
+            <div class="sideways-launch-stage" data-state="launching" hidden>
+                <div class="launch-counter-overlay">
+                    <div class="launch-counter-value text-glow" data-launch-value>0%</div>
+                    <div class="launch-status-subtext font-mono text-gray" data-launch-text>Preparing flight trajectory...</div>
+                    <div class="launch-meter-track"><div class="launch-meter-fill" data-launch-fill style="width: 0%"></div></div>
+                </div>
+                <div class="sideways-flight-arena">
+                    <div class="paper-rocket-sideways-wrap" data-rocket>
+                        <svg viewBox="0 0 100 48" fill="none" class="space-rocket-side-svg">
+                            <path d="M44 14 L18 4 L24 14 Z" fill="rgba(255, 255, 255, 0.9)" stroke="rgba(255, 255, 255, 0.95)" stroke-width="1.2" stroke-linejoin="round"/>
+                            <path d="M44 34 L18 44 L24 34 Z" fill="rgba(255, 255, 255, 0.9)" stroke="rgba(255, 255, 255, 0.95)" stroke-width="1.2" stroke-linejoin="round"/>
+                            <path d="M88 24 C72 16 50 14 26 14 L20 16 L20 32 L26 34 C50 34 72 32 88 24 Z" fill="url(#sideRocketBodyGrad)" stroke="rgba(255, 255, 255, 0.95)" stroke-width="1.5"/>
+                            <path d="M88 24 C80 20 72 19 68 19 L68 29 C72 29 80 28 88 24 Z" fill="rgba(255, 255, 255, 0.98)"/>
+                            <path d="M62 18 C56 18 52 20 52 23 C52 25 56 26 62 26 C66 26 68 24 68 23 C68 20 66 18 62 18 Z" fill="#38bdf8" stroke="#ffffff" stroke-width="1"/>
+                            <path d="M64 19.5 C60 19.5 56 21 55 22.5 C57 21 61 20 64 20 Z" fill="#ffffff" opacity="0.9"/>
+                            <line x1="26" y1="24" x2="68" y2="24" stroke="rgba(148, 163, 184, 0.45)" stroke-width="1.2" stroke-linecap="round"/>
+                            <path d="M20 18 L14 16 L14 32 L20 30 Z" fill="#334155" stroke="#94a3b8" stroke-width="1" stroke-linejoin="round"/>
+                            <path d="M14 18 Q-12 24 14 30 Z" fill="url(#sideThrusterGrad)" class="rocket-side-thruster-plume"/>
+                            <path d="M14 20 Q-2 24 14 28 Z" fill="#ffffff" class="rocket-side-core-flame"/>
+                            <defs>
+                                <linearGradient id="sideRocketBodyGrad" x1="20" y1="14" x2="88" y2="34" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#f8fafc"/><stop offset="0.6" stop-color="#e2e8f0"/><stop offset="1" stop-color="#cbd5e1"/>
+                                </linearGradient>
+                                <linearGradient id="sideThrusterGrad" x1="14" y1="24" x2="-12" y2="24" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#ffffff"/><stop offset="0.3" stop-color="#60a5fa"/><stop offset="0.75" stop-color="#3b82f6"/><stop offset="1" stop-color="transparent"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="rocket-plasma-trail">
+                            <span class="plasma-dot p1"></span><span class="plasma-dot p2"></span>
+                            <span class="plasma-dot p3"></span><span class="plasma-dot p4"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# 2. Sent #}
+            <div class="sent-success-stage font-mono" data-state="sent" hidden>
+                <div class="sent-success-icon-wrap"><span class="sent-success-check">✓</span></div>
+                <h3 class="sent-success-title text-glow uppercase">Message Dispatched</h3>
+                <p class="sent-success-desc text-gray">
+                    Thank you, <span style="color: #ffffff" data-sender-name></span>! Your message has launched successfully.
+                    I’ll review your details and get back to you shortly.
+                </p>
+                <button type="button" class="send-another-btn hoverable font-mono uppercase" data-reset>Send Another Message ↺</button>
+            </div>
+
+            {# 3. Form #}
+            <div data-state="idle">
+                <div class="signal-meter-section">
+                    <div class="signal-meter-labels">
+                        <span class="signal-label text-gray" data-signal-label>Awaiting your details</span>
+                        <span class="signal-percentage text-glow" data-signal-value>0%</span>
+                    </div>
+                    <div class="signal-meter-track"><div class="signal-meter-fill" data-signal-fill style="width: 0%"></div></div>
+                </div>
+
+                <form class="contact-form" method="post" action="{% url 'resume:send' %}" novalidate data-contact-form>
+                    {% csrf_token %}
+                    <div class="form-field">
+                        <label class="field-label text-gray uppercase" for="sender-name">Your Name</label>
+                        <input id="sender-name" name="name" type="text" class="field-input hoverable" placeholder="e.g. Alex Mercer" maxlength="100" required>
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label text-gray uppercase" for="sender-email">Your Email</label>
+                        <input id="sender-email" name="email" type="email" class="field-input hoverable" placeholder="alex@company.com">
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label text-gray uppercase" for="sender-message">Your Message</label>
+                        <textarea id="sender-message" name="message" class="field-input field-textarea hoverable" rows="4" maxlength="5000"
+                                  placeholder="Describe your project, timeline, or engineering goals..." required></textarea>
+                    </div>
+                    {# Honeypot: invisible to people, tempting to bots. #}
+                    <div class="contact-hp" aria-hidden="true">
+                        <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+                    </div>
+                    <button type="submit" class="stellar-transmit-btn hoverable uppercase">
+                        <span class="transmit-btn-shimmer"></span>
+                        <span class="transmit-btn-text">Send Message ➔</span>
+                    </button>
+                    <div class="form-status-msg text-glow font-mono" data-status role="status" hidden></div>
+                </form>
+            </div>
+        </div>
+
+        <div class="direct-comms-deck gsap-reveal font-mono">
+            <div class="comms-capsule">
+                <div class="comms-channel-info">
+                    <span class="comms-tag text-gray">My Email:</span>
+                    <span class="comms-email">{{ contact.email }}</span>
+                </div>
+                <button type="button" class="copy-signal-btn hoverable" data-copy-email="{{ contact.email }}">Copy Email</button>
+            </div>
+            <div class="orbit-availability-tag text-gray"><span>{{ resume.availability }}</span></div>
+        </div>
+    </div>
 </section>
+
+<footer>
+    <div class="container footer-inner font-mono text-gray">
+        <p>{{ resume.footer }}</p>
+        <div class="social-links uppercase">
+            <a href="{{ contact.github }}" class="hoverable" target="_blank" rel="noopener noreferrer" data-scramble>Github</a>
+            <a href="{{ contact.linkedin }}" class="hoverable" target="_blank" rel="noopener noreferrer" data-scramble>LinkedIn</a>
+            <a href="mailto:{{ contact.email }}" class="hoverable" data-scramble>Email</a>
+        </div>
+    </div>
+</footer>
 {% endblock %}
+
+{% block page_js %}<script src="{% static 'resume/js/contact.js' %}"></script>{% endblock %}

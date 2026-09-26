@@ -52,6 +52,19 @@
 /* Projects without screenshots: let the case study use the full modal width. */
 .project-modal-body.no-gallery { grid-template-columns: 1fr; }
 
+/* Contact monolith: only the current state (idle / launching / sent) shows. */
+.cosmic-monolith-card [data-state][hidden],
+.form-status-msg[hidden] { display: none !important; }
+
+/* Honeypot field — off-screen rather than display:none, which some bots skip. */
+.contact-hp {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .wormhole-curtain { transition-duration: 0.2s; }
 }

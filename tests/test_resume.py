@@ -117,6 +117,18 @@ def test_skills_renders_every_capability(client):
 
 
 @pytest.mark.django_db
+def test_contact_page_has_form_csrf_honeypot_and_footer(client):
+    from apps.core import content as site_content
+    html = client.get('/resume/contact/').content.decode()
+    assert 'name="csrfmiddlewaretoken"' in html
+    assert 'action="/resume/contact/send/"' in html
+    for field in ('name', 'email', 'message', 'website'):
+        assert f'name="{field}"' in html
+    assert site_content.CONTACT['email'] in html
+    assert 'data-scramble' in html          # footer links
+
+
+@pytest.mark.django_db
 def test_resume_pdf_buttons_follow_file(client, monkeypatch):
     monkeypatch.setattr('apps.resume.views.finders.find', lambda path: None)
     assert 'resume.pdf' not in client.get('/resume/about/').content.decode()
