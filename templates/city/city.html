@@ -1,0 +1,85 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Backend City — Mahdi Shafiei</title>
+    <meta name="description" content="Backend City: walk through a pixel town where every building is one of Mahdi Shafiei's projects.">
+    <meta name="theme-color" content="#1c1a24">
+    <link rel="preload" href="{% static 'fonts/dm-mono-500.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+    <link rel="stylesheet" href="{% static 'game/css/city.css' %}">
+</head>
+<body class="city">
+    <canvas id="city-canvas" aria-label="Backend City — a walkable map of Mahdi's projects"></canvas>
+
+    {# ---------- HUD ---------- #}
+    <div class="city-hud">
+        <a class="hud-card" href="{% url 'core:home' %}" title="Back to the sketchbook">
+            <img src="{{ city_payload.portrait }}" alt="Mahdi Shafiei" width="48" height="48">
+            <span class="hud-name"><b>MAHDI SHAFIEI</b><small>Backend Developer</small></span>
+        </a>
+        <div class="hud-actions">
+            <a class="hud-btn" href="{{ city_payload.roleUrls.backend }}#projects" data-list-view>
+                <span aria-hidden="true">📋</span><span class="hud-btn-label">List view</span>
+            </a>
+            <button type="button" class="hud-btn hud-icon" data-zoom="1" aria-label="Zoom in">+</button>
+            <button type="button" class="hud-btn hud-icon" data-zoom="-1" aria-label="Zoom out">−</button>
+        </div>
+    </div>
+    <div class="city-zone" aria-live="polite" data-zone-label></div>
+
+    {# ---------- Touch controls ---------- #}
+    <div class="dpad" aria-hidden="true">
+        <button type="button" class="dpad-btn dpad-up" data-dir="up">▲</button>
+        <button type="button" class="dpad-btn dpad-left" data-dir="left">◀</button>
+        <button type="button" class="dpad-btn dpad-right" data-dir="right">▶</button>
+        <button type="button" class="dpad-btn dpad-down" data-dir="down">▼</button>
+    </div>
+    <button type="button" class="action-btn" aria-label="Interact" data-action>A</button>
+
+    {# ---------- Info panel (filled by game.js) ---------- #}
+    <div class="city-panel-scrim" hidden data-panel-scrim>
+        <div class="city-panel" role="dialog" aria-modal="true" aria-labelledby="panel-title" data-panel>
+            <button type="button" class="panel-close" aria-label="Close" data-panel-close>✕</button>
+            <div data-panel-body></div>
+        </div>
+    </div>
+
+    {# ---------- Welcome ---------- #}
+    <div class="city-welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title" data-welcome>
+        <div class="welcome-card">
+            <h1 id="welcome-title">WELCOME TO<br>BACKEND CITY</h1>
+            <p>Every house here is one of Mahdi's projects.</p>
+            <p class="welcome-keys">Move with <kbd>WASD</kbd> / arrow keys or the on-screen pad.<br>
+               Press <kbd>E</kbd>, <kbd>Enter</kbd> or <kbd>Space</kbd> near buildings and people.</p>
+            <button type="button" class="welcome-start" data-start>START</button>
+            <p class="welcome-alt">Rather read? <a href="{{ city_payload.resumeUrl }}">Resume</a> ·
+               <a href="{{ city_payload.roleUrls.backend }}#projects">Project list</a></p>
+        </div>
+    </div>
+
+    {# ---------- Fallbacks ---------- #}
+    <div class="city-error" hidden data-error>
+        <div class="welcome-card">
+            <h1>THE CITY CAN'T LOAD HERE</h1>
+            <p>Your browser couldn't start the game (WebGL is off or unsupported).</p>
+            <p class="welcome-alt"><a href="{{ city_payload.resumeUrl }}">Open the resume</a> ·
+               <a href="{{ city_payload.roleUrls.backend }}#projects">See the project list</a></p>
+        </div>
+    </div>
+    <noscript>
+        <div class="city-error">
+            <div class="welcome-card">
+                <h1>BACKEND CITY NEEDS JAVASCRIPT</h1>
+                <p><a href="/resume/">Open the resume</a> · <a href="/backend/#projects">See the project list</a></p>
+            </div>
+        </div>
+    </noscript>
+
+    {{ city_payload|json_script:"city-data" }}
+    <script src="{% static 'vendor/kaplay-3001.0.19/kaplay.js' %}"></script>
+    <script src="{% static 'game/js/map.js' %}"></script>
+    <script src="{% static 'game/js/game.js' %}"></script>
+</body>
+</html>

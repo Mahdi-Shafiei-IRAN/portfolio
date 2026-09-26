@@ -3,9 +3,8 @@
 Templates and views only read these values — edit the text here.
 """
 
-# Phase 2 switch. While False, the "Enter the city" buttons and the
-# "Backend City" menu item are hidden (and /city/ is not routed).
-CITY_ENABLED = False
+# Backend City switch: shows the "Enter the city" buttons and the menu item.
+CITY_ENABLED = True
 
 SITE = {
     'name': 'Mahdi Shafiei',
