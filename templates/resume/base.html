@@ -1,0 +1,79 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ resume.full_name }} | Backend Developer{% endblock %}</title>
+    <meta name="description" content="{{ resume.full_name }} — backend developer building APIs and infrastructure with Python, Django, Docker and Linux.">
+    <meta name="theme-color" content="#050505">
+    <meta name="color-scheme" content="dark">
+    <script>
+        /* Before first paint: arriving through the wormhole starts on black; the
+           preloader runs once per session (never after the wormhole or with reduced motion). */
+        (function () {
+            var d = document.documentElement, s = null;
+            try { s = window.sessionStorage; } catch (e) {}
+            var arriving = s && s.getItem('wormhole-entering');
+            if (arriving) d.classList.add('wormhole-arriving');
+            if (arriving || (s && s.getItem('preloaderDone') === 'true') ||
+                window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                d.classList.add('no-preloader');
+            }
+        })();
+    </script>
+    <link rel="preload" href="{% static 'resume/fonts/inter-400.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{% static 'resume/fonts/space-mono-400.woff2' %}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{% static 'resume/css/fonts.css' %}">
+    <link rel="stylesheet" href="{% static 'resume/css/resume.css' %}">
+    <link rel="stylesheet" href="{% static 'resume/css/wormhole-resume.css' %}">
+    <script type="importmap">
+        {"imports": {"three": "{% static 'vendor/three-0.184.0/three.module.min.js' %}", "three/addons/": "{% get_static_prefix %}vendor/three-0.184.0/addons/"}}
+    </script>
+</head>
+<body data-page="{{ page }}" data-prev="{{ prev_url }}" data-next="{{ next_url }}">
+    <div id="preloader" role="status">
+        <div class="preloader-hud">
+            <div class="loader-text font-mono">INITIALIZING</div>
+            <div class="loader-bar-bg"><div class="loader-bar" style="width: 0%"></div></div>
+            <div class="preloader-footer font-mono" style="justify-content: center; margin-top: 1rem">
+                <span class="preloader-pct">000%</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="cursor"></div>
+
+    {% if page == 'hero' %}
+    <div class="three-hero-bg-wrapper hero-visible" style="position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none">
+        <canvas id="webgl-canvas"></canvas>
+        <div class="bg-overlay"></div>
+    </div>
+    {% else %}
+    <canvas id="three-starfield-canvas" class="starfield-visible"></canvas>
+    {% endif %}
+
+    {% include 'resume/_navbar.html' %}
+
+    <main class="page-transition-wrapper">
+        {% block content %}{% endblock %}
+
+        {% if next_url %}
+        <button type="button" class="scroll-hint scroll-hint-bottom font-mono text-gray hoverable" data-next-hint
+                style="background: none; border: none; width: 100%; cursor: pointer">
+            Scroll down or click for next section ({{ next_key }}) <span class="scroll-arrow">↓</span>
+        </button>
+        {% endif %}
+    </main>
+
+    <a class="wormhole-back font-mono uppercase hoverable" href="/" data-wormhole-back>← Back to the sketchbook</a>
+    <div class="wormhole-curtain" aria-hidden="true"></div>
+
+    <script src="{% static 'vendor/gsap-3.15.0/gsap.min.js' %}"></script>
+    <script src="{% static 'vendor/gsap-3.15.0/ScrollTrigger.min.js' %}"></script>
+    <script src="{% static 'vendor/gsap-3.15.0/Observer.min.js' %}"></script>
+    <script src="{% static 'vendor/lenis-1.3.26/lenis.min.js' %}"></script>
+    <script src="{% static 'resume/js/core.js' %}"></script>
+    {% if page != 'hero' %}<script type="module" src="{% static 'resume/js/starfield.js' %}"></script>{% endif %}
+    {% block page_js %}{% endblock %}
+</body>
+</html>

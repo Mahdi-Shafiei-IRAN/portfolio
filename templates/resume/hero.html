@@ -1,0 +1,31 @@
+{% extends 'resume/base.html' %}
+{% load static %}
+
+{% block content %}
+<header class="container hero-container">
+    <p class="hero-elem hero-subtitle font-mono uppercase">{{ resume.subtitle }}</p>
+    <h1 class="hero-elem hero-title-1 uppercase text-glow-intense glitch-wrapper" data-text="{{ resume.title_1 }}">{{ resume.title_1 }}</h1>
+    <h1 class="hero-elem hero-title-2 uppercase">{{ resume.title_2 }}</h1>
+
+    <div class="hero-elem hero-globe-wrapper">
+        <div class="hero-globe-cta hoverable" role="button" tabindex="0" aria-label="Explore About Section"
+             data-href="{% url 'resume:about' %}">
+            <div class="globe-radar-ring outer"></div>
+            <div class="globe-radar-ring inner"></div>
+            <canvas class="globe-canvas"></canvas>
+            <div class="globe-core-lens">
+                <span class="globe-action font-mono uppercase">EXPLORE</span>
+                <span class="globe-sub font-mono">[ ABOUT ]</span>
+                <div class="globe-arrow-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+{% endblock %}
+
+{% block page_js %}
+<script type="module" src="{% static 'resume/js/blackhole.js' %}"></script>
+<script src="{% static 'resume/js/globe.js' %}"></script>
+{% endblock %}

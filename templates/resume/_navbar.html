@@ -1,0 +1,84 @@
+{% load static resume_tags %}
+{# 1. Top-left logo (hero only) #}
+<div class="hero-logo {% if page == 'hero' %}fade-in{% else %}fade-out{% endif %}"
+     style="position: fixed; top: 2rem; left: 2rem; z-index: 1000; pointer-events: {% if page == 'hero' %}auto{% else %}none{% endif %}">
+    <a href="{% url 'resume:hero' %}" class="logo hoverable text-glow"
+       style="text-decoration: none; color: #fff; font-size: 1.5rem; font-weight: 900; letter-spacing: 0.1em">{% convex resume.name %}</a>
+</div>
+
+{# 1.5 Top-right resume download (hero only) #}
+{% if has_resume %}
+<div class="hero-logo {% if page == 'hero' %}fade-in{% else %}fade-out{% endif %}"
+     style="position: fixed; top: 2rem; right: 2rem; z-index: 1000; pointer-events: {% if page == 'hero' %}auto{% else %}none{% endif %}">
+    <a href="{% static 'resume.pdf' %}" download class="nav-link hoverable font-mono uppercase text-glow" aria-label="Download Resume"
+       style="display: inline-flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #fff; font-size: 1.35rem; font-weight: 800; letter-spacing: 0.08em">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M8 11l4 4 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        {% convex "Resume" %}
+    </a>
+</div>
+{% endif %}
+
+{# 2. Glass dock navigation #}
+<nav class="dock-mode nav-visible" data-dock>
+    <div class="container nav-inner">
+        <a href="{% url 'resume:hero' %}" class="mobile-brand-link font-mono uppercase text-glow">{{ resume.name|title }}</a>
+
+        <div class="nav-links font-mono uppercase">
+            {% for r in nav_routes %}{% if r.key != 'hero' or page != 'hero' %}
+            <a href="{{ r.url }}" class="nav-link hoverable text-glow">{% convex r.label %}</a>
+            {% endif %}{% endfor %}
+        </div>
+
+        <div class="nav-actions">
+            <button type="button" class="nav-link hoverable font-mono uppercase text-glow sound-btn" aria-label="Unmute Audio" data-sound-toggle>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+            </button>
+
+            {% if has_resume and page != 'hero' %}
+            <a href="{% static 'resume.pdf' %}" download class="nav-link hoverable font-mono uppercase text-glow desktop-resume-link" aria-label="Download Resume">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 11l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                {% convex "Resume" %}
+            </a>
+            {% endif %}
+
+            <button type="button" class="mobile-menu-toggle hoverable" aria-label="Open Navigation Menu" aria-expanded="false" data-menu-toggle>
+                <span class="hamburger-bar"></span>
+                <span class="hamburger-bar"></span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+{# 3. Full-screen mobile drawer #}
+<div class="mobile-nav-drawer" role="dialog" aria-modal="true" aria-label="Navigation Menu" data-drawer>
+    <div class="mobile-drawer-header font-mono">
+        <span class="mobile-drawer-tag text-gray">NAVIGATION</span>
+        <button type="button" class="mobile-drawer-close hoverable" aria-label="Close navigation menu" data-drawer-close>✕</button>
+    </div>
+
+    <div class="mobile-nav-links font-mono">
+        {% for r in nav_routes %}
+        <a href="{{ r.url }}" class="mobile-nav-item hoverable{% if r.key == page %} active{% endif %}">
+            <span class="mobile-nav-num text-gray">{{ r.number }}</span>
+            <span class="mobile-nav-label uppercase text-glow">{{ r.label }}</span>
+            {% if r.key == page %}<span class="mobile-nav-indicator">●</span>{% endif %}
+        </a>
+        {% endfor %}
+        <a href="/" class="mobile-nav-item hoverable" data-wormhole-back>
+            <span class="mobile-nav-num text-gray">↩</span>
+            <span class="mobile-nav-label uppercase text-glow">Sketchbook</span>
+        </a>
+    </div>
+
+    <div class="mobile-drawer-footer font-mono">
+        {% if has_resume %}
+        <a href="{% static 'resume.pdf' %}" download class="mobile-resume-btn hoverable uppercase">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10"/><path d="M8 11l4 4 4-4"/><path d="M4 20h16"/></svg>
+            Download Resume (PDF)
+        </a>
+        {% endif %}
+        <div class="mobile-footer-meta text-gray">
+            {% for line in resume.drawer_meta %}<span>{{ line }}</span>{% endfor %}
+        </div>
+    </div>
+</div>

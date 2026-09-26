@@ -1,0 +1,54 @@
+/* Our additions to the upstream resume styles: the wormhole curtain, the
+   "back to the sketchbook" pill, and the preloader switch. */
+
+.no-preloader #preloader { display: none !important; }
+
+/* Full-screen black curtain: covers the page when arriving through (or
+   leaving back into) the wormhole, then fades. */
+.wormhole-curtain {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.wormhole-arriving .wormhole-curtain,
+.wormhole-closing .wormhole-curtain {
+    opacity: 1;
+    pointer-events: auto;
+}
+.wormhole-closing .wormhole-curtain { transition-duration: 0.5s; }
+
+.wormhole-back {
+    position: fixed;
+    left: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 900;
+    padding: 0.55rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    background: rgba(10, 10, 14, 0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #bbb;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    transition: color 0.25s, border-color 0.25s, box-shadow 0.25s;
+}
+.wormhole-back:hover,
+.wormhole-back:focus-visible {
+    color: #fff;
+    border-color: rgba(255, 174, 73, 0.6);
+    box-shadow: 0 0 18px rgba(255, 174, 73, 0.25);
+}
+
+@media (max-width: 768px) {
+    .wormhole-back { display: none; }       /* the mobile drawer has a "Sketchbook" item */
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wormhole-curtain { transition-duration: 0.2s; }
+}

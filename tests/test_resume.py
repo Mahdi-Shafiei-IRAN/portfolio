@@ -2,9 +2,68 @@ import pytest
 from django.core.cache import cache
 from django.test import Client
 
+from apps.resume import content as resume_content
 from apps.resume.models import ContactMessage
+from apps.resume.templatetags.resume_tags import convex
 
 SEND = '/resume/contact/send/'
+PAGES = {
+    '/resume/': 'resume/hero.html',
+    '/resume/about/': 'resume/about.html',
+    '/resume/work/': 'resume/work.html',
+    '/resume/skills/': 'resume/skills.html',
+    '/resume/contact/': 'resume/contact.html',
+}
+
+
+# --- shell --------------------------------------------------------------------
+
+def test_convex_wraps_each_character_and_escapes():
+    assert convex('A <b') == (
+        '<span class="convex-word"><span class="convex-char">A</span>'
+        '<span class="convex-char">\xa0</span><span class="convex-char">&lt;</span>'
+        '<span class="convex-char">b</span></span>'
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('url,template', PAGES.items())
+def test_resume_page_renders_on_its_own_base(client, url, template):
+    r = client.get(url)
+    assert r.status_code == 200
+    names = [t.name for t in r.templates]
+    assert template in names and 'resume/base.html' in names
+    assert 'base.html' not in names          # independent from the doodle layout
+    html = r.content.decode()
+    for route in PAGES:
+        assert f'href="{route}"' in html     # drawer lists every section
+    assert 'Back to the sketchbook' in html
+
+
+@pytest.mark.django_db
+def test_hero_has_titles_import_map_and_black_hole(client):
+    html = client.get('/resume/').content.decode()
+    assert resume_content.RESUME['title_1'] in html and resume_content.RESUME['title_2'] in html
+    assert '"three": "/static/vendor/three-0.184.0/three.module.min.js"' in html
+    assert '"three/addons/": "/static/vendor/three-0.184.0/addons/"' in html
+    assert 'resume/js/blackhole.js' in html
+    assert 'resume/js/starfield.js' not in html   # starfield only behind inner pages
+
+
+@pytest.mark.django_db
+def test_section_order_prev_next(client):
+    about = client.get('/resume/about/').context
+    assert (about['prev_url'], about['next_url'], about['next_key']) == ('/resume/', '/resume/work/', 'work')
+    contact = client.get('/resume/contact/').context
+    assert (contact['prev_url'], contact['next_url']) == ('/resume/skills/', '')
+
+
+@pytest.mark.django_db
+def test_resume_pdf_buttons_follow_file(client, monkeypatch):
+    monkeypatch.setattr('apps.resume.views.finders.find', lambda path: None)
+    assert 'resume.pdf' not in client.get('/resume/about/').content.decode()
+    monkeypatch.setattr('apps.resume.views.finders.find', lambda path: 'static/resume.pdf')
+    assert 'resume.pdf' in client.get('/resume/about/').content.decode()
 
 
 @pytest.fixture(autouse=True)
