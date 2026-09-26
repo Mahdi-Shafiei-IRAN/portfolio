@@ -18,7 +18,7 @@ SITE = {
 }
 
 CONTACT = {
-    'email': 'mahdishafiei930@gmail.com',
+    'email': 'mahdishafiei920@gmail.com',
     'github': 'https://github.com/Mahdi-Shafiei-IRAN',
     'github_label': 'github.com/Mahdi-Shafiei-IRAN',
     'linkedin': 'https://www.linkedin.com/in/mahdi-shafiei-iran/',
