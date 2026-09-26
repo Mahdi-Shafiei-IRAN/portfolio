@@ -608,27 +608,45 @@ function start() {
     let lastRenderMs = 0;
     let frameId;
 
-    // Adaptive quality: drop one resolution level when more than 18 of 60 frames
-    // arrive late, or at once when two frames in a row crawl past 250 ms. The
-    // first frame after a pause (hidden tab, scrolled past the hero) is not timed.
+    // Adaptive quality, measured in windows of 60 frames or 2 s: drop one
+    // resolution level when frames run late (over 18 in a window, or 30% of a short
+    // one) or three in a row crawl past 250 ms. Each drop is a probe: if the next
+    // window is not clearly faster, the GPU wasn't the bottleneck (e.g. the browser
+    // caps rAF at 30 Hz on battery), so the level is restored and adapting stops.
+    // The load-time intro and the first frame after a pause are not timed.
     let lastTickMs = 0;
     let sampled = 0;
     let late = 0;
     let crawling = 0;
+    let gapSum = 0;
+    let probeFrom = 0;   // average gap before the last drop; 0 = not probing
+    let frozen = false;
     const adaptQuality = (now, budgetMs) => {
         const gap = lastTickMs ? now - lastTickMs : 0;
         lastTickMs = now;
-        if (!gap || now - initTime < 1500 || dprLevel >= DPR_LEVELS.length - 1) return;
+        if (!gap || frozen || now - initTime < 4000) return;
         sampled += 1;
+        gapSum += gap;
         if (gap > budgetMs * 1.6) late += 1;
         crawling = gap > 250 ? crawling + 1 : 0;
-        if (late > 18 || crawling >= 2) {
+        const windowDone = sampled >= 60 || gapSum >= 2000;
+        const tooSlow = late > 18 || crawling >= 3 || (windowDone && late > sampled * 0.3);
+        if (probeFrom) {
+            if (!windowDone) return;
+            if (gapSum / sampled > probeFrom * 0.85) {
+                dprLevel -= 1;
+                handleResize();
+                frozen = true;
+            }
+            probeFrom = 0;
+        } else if (tooSlow && dprLevel < DPR_LEVELS.length - 1) {
+            probeFrom = gapSum / sampled;
             dprLevel += 1;
             handleResize();
-            sampled = late = crawling = 0;
-        } else if (sampled >= 60) {
-            sampled = late = 0;
+        } else if (!windowDone) {
+            return;
         }
+        sampled = late = crawling = gapSum = 0;
     };
 
     const tick = () => {

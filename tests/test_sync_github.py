@@ -89,6 +89,21 @@ def test_resync_keeps_admin_text_order_and_live_url():
 
 
 @pytest.mark.django_db
+def test_resync_keeps_admin_text_that_looks_like_a_placeholder():
+    sync_repos([repo('site', description=None)])
+    Project.objects.filter(title='Site').update(description='A Django project.', tech_stack='Python, Django')
+    sync_repos([repo('site', description=None)])
+    assert Project.objects.get(title='Site').description == 'A Django project.'
+
+
+@pytest.mark.django_db
+def test_resync_tech_follows_github_while_description_does():
+    sync_repos([repo('api', description='An API.')])
+    sync_repos([repo('api', description='An API.', topics=['docker'])])
+    assert Project.objects.get(title='Api').tech_stack == 'Python, docker'
+
+
+@pytest.mark.django_db
 def test_resync_refreshes_untouched_placeholder_projects():
     sync_repos([repo('tool', description=None)])
     sync_repos([repo('tool', description=None, language='Go', topics=['cli'])])

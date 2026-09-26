@@ -18,7 +18,6 @@ upsert می‌شوند (github_url کلید یکتا نیست، پس با title 
 """
 
 import json
-import re
 import urllib.request
 from datetime import date
 
@@ -63,7 +62,11 @@ def placeholder(lang):
     return f"A {lang} project." if lang else "A software project."
 
 
-PLACEHOLDER_RE = re.compile(r"^A (.+ )?project\.$")
+def has_placeholder(project):
+    """True while the description is still the one sync wrote. The language it was
+    written for is the first entry of the synced tech stack ("Python, docker")."""
+    first = (project.tech_stack or "").split(",")[0].strip()
+    return project.description in {"", placeholder(""), placeholder(first)}
 
 
 def sync_repos(repos):
@@ -97,13 +100,14 @@ def sync_repos(repos):
             continue
 
         # Re-sync: GitHub owns the links, the star flag and its own description;
-        # text, order and category written in the admin survive.
-        untouched = not project.description or PLACEHOLDER_RE.match(project.description)
+        # text, order and category written in the admin survive. The tech stack
+        # follows GitHub while the description does too (placeholder or GitHub's).
+        synced_text = has_placeholder(project) or (desc and project.description == desc)
         if desc:
             project.description = desc
-        elif untouched:
+        elif synced_text:
             project.description = placeholder(lang)
-        if untouched:
+        if synced_text:
             project.tech_stack = tech
         project.github_url = web_url(repo.get("html_url"))
         project.live_url = homepage or project.live_url

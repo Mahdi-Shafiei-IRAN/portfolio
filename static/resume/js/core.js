@@ -118,15 +118,16 @@
         setInterval(moon, 3600000);
 
         let visible = false;
-        let lastTarget = null;
         window.addEventListener('mousemove', (e) => {
             if (!visible) { gsap.set(el, { opacity: 1 }); visible = true; }
             xTo(e.clientX);
             yTo(e.clientY);
-            // Restyle only when the element under the pointer changes.
+        }, { passive: true });
+        // mouseover fires exactly when the element under the pointer changes (also
+        // when the page scrolls under a still mouse), so the cursor restyles only then.
+        document.addEventListener('mouseover', (e) => {
             const t = e.target;
-            if (t === lastTarget || !t.closest) return;
-            lastTarget = t;
+            if (!t.closest) return;
             el.classList.toggle('hovered', !!t.closest('.hoverable'));
             el.classList.toggle('is-subtle', !!t.closest('nav, .hero-logo'));
             el.classList.toggle('on-gallery', !!t.closest('.project-modal-gallery'));
