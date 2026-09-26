@@ -1,4 +1,3 @@
-from django.contrib.staticfiles import finders
 from django.templatetags.static import static
 from django.urls import reverse
 from django.views.generic import TemplateView
@@ -11,7 +10,14 @@ from .lots import assign_lots
 
 DISTRICTS = ['backend', 'devops', 'network']
 PORTRAIT = 'game/img/portrait.png'
-PORTRAIT_FALLBACK = 'img/doodle/waving-static.png'
+# The parts of a case study the city's project panel shows.
+PANEL_FIELDS = ('title', 'tagline', 'category', 'description', 'techStack', 'features',
+                'images', 'githubUrl', 'liveUrl')
+
+
+def panel_data(project):
+    study = project.case_study
+    return {field: study[field] for field in PANEL_FIELDS}
 
 
 class CityView(TemplateView):
@@ -19,11 +25,12 @@ class CityView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        projects = list(Project.objects.prefetch_related('gallery'))
+        # 'id' breaks ties so equal `order` values keep the same houses on every visit.
+        projects = list(Project.objects.order_by('order', 'id').prefetch_related('gallery'))
 
         districts = {}
         for key in DISTRICTS:
-            placed = assign_lots(p.case_study for p in projects if p.category == key)
+            placed = assign_lots(panel_data(p) for p in projects if p.category == key)
             districts[key] = placed
 
         spawn = self.request.GET.get('spawn', '')
@@ -39,7 +46,7 @@ class CityView(TemplateView):
             },
             'roleUrls': {key: reverse(f'core:{key}') for key in DISTRICTS},
             'resumeUrl': reverse('resume:hero'),
-            'portrait': static(PORTRAIT if finders.find(PORTRAIT) else PORTRAIT_FALLBACK),
+            'portrait': static(PORTRAIT),
             'spawn': spawn if spawn in DISTRICTS else 'gate',
         }
         return ctx

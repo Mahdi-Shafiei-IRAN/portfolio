@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from apps.city.lots import assign_lots
+from apps.city.lots import LOTS_PER_DISTRICT, assign_lots
+from apps.city.views import PANEL_FIELDS
 from apps.core import content as site_content
 from apps.projects.models import Project
 from scripts import build_city_art, make_portrait
@@ -58,6 +59,30 @@ def test_city_payload_places_projects_by_district(client):
     assert data['districts']['network']['lots'] == [None] * 6
     assert set(data) >= {'districts', 'skills', 'npcs', 'links', 'roleUrls', 'resumeUrl', 'portrait', 'spawn'}
     assert data['roleUrls'] == {'backend': '/backend/', 'devops': '/devops/', 'network': '/network/'}
+
+
+@pytest.mark.django_db
+def test_city_payload_sends_only_panel_fields(client):
+    Project.objects.create(title='API Kit', description='d', tech_stack='Python', problem='long text')
+    lot = payload(client.get('/city/').content.decode())['districts']['backend']['lots'][0]
+    assert set(lot) == set(PANEL_FIELDS)
+
+
+@pytest.mark.django_db
+def test_equal_order_keeps_houses_stable(client):
+    first = Project.objects.create(title='First', description='d', tech_stack='x', order=0)
+    Project.objects.create(title='Second', description='d', tech_stack='x', order=0)
+    Project.objects.filter(pk=first.pk).update(title='First')   # touch the row, as an edit would
+    lots = payload(client.get('/city/').content.decode())['districts']['backend']['lots']
+    assert [lots[0]['title'], lots[1]['title']] == ['First', 'Second']
+
+
+def test_map_has_one_building_per_lot():
+    """map.js hard-codes the houses; it must match LOTS_PER_DISTRICT or projects vanish."""
+    source = (GAME / 'js' / 'map.js').read_text(encoding='utf-8')
+    for district in ('backend', 'devops', 'network'):
+        indexes = sorted(int(i) for i in re.findall(rf"\{{ lot: \['{district}', (\d+)\]", source))
+        assert indexes == list(range(LOTS_PER_DISTRICT)), district
 
 
 @pytest.mark.django_db

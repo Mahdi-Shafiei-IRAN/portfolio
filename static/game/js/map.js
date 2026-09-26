@@ -71,7 +71,7 @@ window.CITY_MAP = {
         { lot: ['devops', 3], style: 'greystone', x: 41, y: 27, w: 3 },
         { lot: ['devops', 4], style: 'greystone', x: 45, y: 27, w: 3 },
         { lot: ['devops', 5], style: 'greystone', x: 49, y: 27, w: 3 },
-        { board: 'devops', x: 39, y: 21 },
+        { board: 'devops', x: 38, y: 21 },
 
         // Network hill: antennas are the project lots
         { skill: 'relay', style: 'greystone', x: 30, y: 4, w: 4, door: 1 },
@@ -86,7 +86,7 @@ window.CITY_MAP = {
         // Plaza and gate
         { skill: 'github', label: 'GITHUB', style: 'red', x: 26, y: 16, w: 4, door: 2, logo: 'logoGithub' },
         { skill: 'linkedin', label: 'LINKEDIN', style: 'grey', x: 34, y: 16, w: 4, door: 1, logo: 'logoLinkedin' },
-        { skill: 'mailbox', label: 'MAILBOX', sprite: 'mailbox', x: 37, y: 21, w: 1, h: 1 },
+        { skill: 'mailbox', label: 'MAILBOX', sprite: 'mailbox', x: 36, y: 21, w: 1, h: 1 },
         { skill: 'nginx', gate: true, x: 29, y: 42, w: 6, h: 4, noLabel: true },
     ],
 
@@ -99,7 +99,7 @@ window.CITY_MAP = {
         { sprite: 'rack', x: 20, y: 15, fps: 2, solid: true },
         { sprite: 'rack', x: 21, y: 15, fps: 2, solid: true },
         { sprite: 'chimney', x: 18, y: 12.5, smoke: true },
-        { sprite: 'dish', x: 33, y: 3.6 },
+        { sprite: 'dish', x: 34, y: 5, solid: true },
         { sprite: 'well', tile: 104, x: 26, y: 28, solid: true },
     ],
     // Shipping containers: [x, y, colour 0-3, stack height]; two tiles wide.
@@ -115,7 +115,7 @@ window.CITY_MAP = {
     // Cables from the antennas into the relay station: chains of [x, y] points.
     cables: [
         [[19.5, 5.9], [23.5, 5.9], [27.5, 5.9], [30, 5.6]],
-        [[44.5, 5.9], [40.5, 5.9], [36.5, 5.9], [34, 5.6]],
+        [[44.5, 5.9], [40.5, 5.9], [36.5, 5.9], [34.4, 5.7]],
     ],
 
     // Townsfolk: chars.png frame, position (the tile they stand on).

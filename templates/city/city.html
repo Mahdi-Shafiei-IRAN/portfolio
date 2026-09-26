@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Backend City — Mahdi Shafiei</title>
     <meta name="description" content="Backend City: walk through a pixel town where every building is one of Mahdi Shafiei's projects.">
     <meta name="theme-color" content="#1c1a24">
@@ -34,10 +34,10 @@
 
     {# ---------- Touch controls ---------- #}
     <div class="dpad" aria-hidden="true">
-        <button type="button" class="dpad-btn dpad-up" data-dir="up">▲</button>
-        <button type="button" class="dpad-btn dpad-left" data-dir="left">◀</button>
-        <button type="button" class="dpad-btn dpad-right" data-dir="right">▶</button>
-        <button type="button" class="dpad-btn dpad-down" data-dir="down">▼</button>
+        <button type="button" class="dpad-btn dpad-up" data-dir="up" tabindex="-1">▲</button>
+        <button type="button" class="dpad-btn dpad-left" data-dir="left" tabindex="-1">◀</button>
+        <button type="button" class="dpad-btn dpad-right" data-dir="right" tabindex="-1">▶</button>
+        <button type="button" class="dpad-btn dpad-down" data-dir="down" tabindex="-1">▼</button>
     </div>
     <button type="button" class="action-btn" aria-label="Interact" data-action>A</button>
 
@@ -76,7 +76,8 @@
         <div class="city-error">
             <div class="welcome-card">
                 <h1>BACKEND CITY NEEDS JAVASCRIPT</h1>
-                <p><a href="/resume/">Open the resume</a> · <a href="/backend/#projects">See the project list</a></p>
+                <p><a href="{{ city_payload.resumeUrl }}">Open the resume</a> ·
+                   <a href="{{ city_payload.roleUrls.backend }}#projects">See the project list</a></p>
             </div>
         </div>
     </noscript>

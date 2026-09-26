@@ -333,7 +333,9 @@
     /* ------------------------------------------------------------------ */
     /* Baking the static world into canvases                               */
     /* ------------------------------------------------------------------ */
-    function bake(world, img, frame) {
+    // Frame 0 is drawn in full. The other sea-shimmer frames (pass `base`) copy it
+    // and repaint only the sea plus whatever sits on top of it.
+    function bake(world, img, frame, base) {
         var c = document.createElement('canvas');
         c.width = W * T;
         c.height = H * T;
@@ -363,12 +365,41 @@
                     : !left ? set.l : !right ? set.r : set.c;
         }
 
+        function sea() {
+            for (var y = 0; y < H; y++) {
+                prop('shore', frame, (MAP.seaX - 1) * T, y * T);
+                for (var x = MAP.seaX; x < W; x++) prop('water', frame, x * T, y * T);
+            }
+        }
+        function docks() {
+            MAP.docks.forEach(function (d) {
+                for (var i = 0; i < d[2]; i++) {
+                    prop('dock', 0, (d[0] + i) * T, d[1] * T);
+                    prop('dock', 1, (d[0] + i) * T, (d[1] + 1) * T);
+                }
+                g.fillStyle = 'rgba(38,43,68,.25)';
+                g.fillRect(d[0] * T + 6, (d[1] + 2) * T, d[2] * T - 6, 3);
+                g.fillStyle = OUTLINE;
+                g.fillRect((d[0] + d[2]) * T - 1, d[1] * T, 1, 2 * T);
+            });
+        }
+
+        if (base) {
+            var shoreX = (MAP.seaX - 1) * T;
+            g.drawImage(base, 0, 0);
+            sea();
+            docks();
+            world.tiles.forEach(function (t) { if ((t.x + 1) * T > shoreX) tile(t.t, t.x, t.y); });
+            world.sprites.forEach(function (s) {
+                if (s.px + ATLAS[s.name].w > shoreX) prop(s.name, s.frame, s.px, s.py);
+            });
+            return c;
+        }
+
         for (var y = 0; y < H; y++) {
-            for (var x = 0; x < W; x++) {
+            for (var x = 0; x < MAP.seaX - 1; x++) {
                 var i = y * W + x;
-                if (x >= MAP.seaX) prop('water', frame, x * T, y * T);
-                else if (x === MAP.seaX - 1) prop('shore', frame, x * T, y * T);
-                else if (world.stones[i]) tile(TILE.stones, x, y);
+                if (world.stones[i]) tile(TILE.stones, x, y);
                 else if (world.road[i]) tile(autotile(DIRT, isRoad, x, y), x, y);
                 else {
                     tile(world.base[i], x, y);
@@ -376,17 +407,8 @@
                 }
             }
         }
-
-        MAP.docks.forEach(function (d) {
-            for (var i = 0; i < d[2]; i++) {
-                prop('dock', 0, (d[0] + i) * T, d[1] * T);
-                prop('dock', 1, (d[0] + i) * T, (d[1] + 1) * T);
-            }
-            g.fillStyle = 'rgba(38,43,68,.25)';
-            g.fillRect(d[0] * T + 6, (d[1] + 2) * T, d[2] * T - 6, 3);
-            g.fillStyle = OUTLINE;
-            g.fillRect((d[0] + d[2]) * T - 1, d[1] * T, 1, 2 * T);
-        });
+        sea();
+        docks();
 
         world.tiles.forEach(function (t) { tile(t.t, t.x, t.y); });
 
@@ -431,7 +453,7 @@
     var scrim = $('[data-panel-scrim]'), panel = $('[data-panel]'), panelBody = $('[data-panel-body]');
     var state = {
         started: false, panel: false, dialogue: null, near: null, zone: null,
-        touch: !!(window.matchMedia && window.matchMedia('(hover: none)').matches),
+        touch: !!(window.matchMedia && window.matchMedia('(pointer: coarse), (hover: none)').matches),
     };
     panel.tabIndex = -1;
 
@@ -682,7 +704,10 @@
     canvas.addEventListener('pointerdown', function (e) { if (e.pointerType === 'touch') setTouch(true); });
 
     document.querySelectorAll('[data-zoom]').forEach(function (b) {
-        b.addEventListener('click', function () { zoom(Number(b.dataset.zoom)); });
+        b.addEventListener('click', function () {
+            zoom(Number(b.dataset.zoom));
+            b.blur();   // so the next Space / Enter talks to the game, not this button
+        });
     });
     function zoom(step) { zoomIndex = Math.max(0, Math.min(zoomLevels.length - 1, zoomIndex + step)); }
 
@@ -817,7 +842,8 @@
 
     function run(img) {
         world = buildWorld();
-        var frames = [0, 1, 2].map(function (f) { return bake(world, img, f); });
+        var first = bake(world, img, 0);
+        var frames = [first, bake(world, img, 1, first), bake(world, img, 2, first)];
         var labels = bakeLabels(world);
         var dpr = Math.min(window.devicePixelRatio || 1, 3);
 
@@ -835,6 +861,8 @@
 
         frames.forEach(function (c, i) { k.loadSprite('ground' + i, c); });
         k.loadSprite('labels', labels);
+        var groundFrames = frames.length;
+        first = frames = labels = null;   // KAPLAY has its own copies; don't pin ~12 MB of canvases
         k.loadSprite('chars', img.chars, { sliceX: img.chars.width / T });
         var atlas = {};
         Object.keys(ATLAS).forEach(function (name) {
@@ -844,11 +872,11 @@
         k.loadSpriteAtlas(img.props, atlas);
 
         k.onLoad(function () {
-            var ground = frames.map(function (c, i) {
-                var obj = k.add([k.sprite('ground' + i), k.pos(0, 0), k.z(0)]);
-                obj.hidden = i > 0;
-                return obj;
-            });
+            var ground = [];
+            for (var i = 0; i < groundFrames; i++) {
+                ground.push(k.add([k.sprite('ground' + i), k.pos(0, 0), k.z(0)]));
+                ground[i].hidden = i > 0;
+            }
             k.add([k.sprite('labels'), k.pos(0, 0), k.z(100000)]);
 
             var live = world.animated.map(function (a) {
