@@ -20,6 +20,8 @@ graphify-out/
 
 # Docs, plans, tooling
 docs/
+assets-src/
+scripts/
 README.md
 .dockerignore
 Dockerfile

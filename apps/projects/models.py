@@ -32,7 +32,7 @@ class Project(models.Model):
     image = models.ImageField(upload_to='projects/', blank=True)
     category = models.CharField(
         max_length=20, choices=Category.choices, default=Category.BACKEND,
-        help_text='Which role page (and later, which Backend City district) shows this project.',
+        help_text='Which role page and which Backend City district show this project.',
     )
     started_on = models.DateField(null=True, blank=True)
     ended_on = models.DateField(
