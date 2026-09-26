@@ -108,6 +108,15 @@ def test_work_json_cannot_break_out_of_script(client):
 
 
 @pytest.mark.django_db
+def test_skills_renders_every_capability(client):
+    html = client.get('/resume/skills/').content.decode()
+    caps = resume_content.RESUME['capabilities']
+    assert html.count('class="skill-orbital-card hoverable"') == len(caps) == 6
+    for cap in caps:
+        assert escape(cap['title']) in html
+
+
+@pytest.mark.django_db
 def test_resume_pdf_buttons_follow_file(client, monkeypatch):
     monkeypatch.setattr('apps.resume.views.finders.find', lambda path: None)
     assert 'resume.pdf' not in client.get('/resume/about/').content.decode()

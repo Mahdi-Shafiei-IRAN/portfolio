@@ -1,8 +1,46 @@
 {% extends 'resume/base.html' %}
-{% load resume_tags %}
+{% load static resume_tags %}
+
+{% block title %}Skills — {{ resume.full_name }}{% endblock %}
 
 {% block content %}
-<section id="skills" class="container">
-    <div class="gsap-reveal">{% masked_title "Core Capabilities" "3." %}<div class="divider"></div></div>
+<section id="skills" class="skills-page-section">
+    <div class="container gsap-reveal skills-header">
+        {% masked_title "Core Capabilities" "3." %}
+        <div class="divider"></div>
+    </div>
+
+    {# 360° cylindrical orbital stage #}
+    <div class="skills-orbital-viewport" role="region" aria-label="360 Degree Skills Carousel" data-skills>
+        <div class="orbital-ambient-halo"></div>
+        <div class="orbital-core-ring ring-top"></div>
+        <div class="orbital-core-ring ring-mid"></div>
+
+        <div class="skills-cylinder-stage">
+            {% for cat in resume.capabilities %}
+            <div class="skill-orbital-card hoverable" data-index="{{ forloop.counter0 }}">
+                <div class="orbital-card-inner">
+                    <div class="orbital-card-top font-mono">
+                        <span class="skill-id-badge">{{ cat.id }}</span>
+                        <span class="skill-tag uppercase">{{ cat.tag }}</span>
+                    </div>
+                    <h3 class="skill-card-title uppercase text-glow">{{ cat.title }}</h3>
+                    <p class="skill-card-summary text-gray">{{ cat.summary }}</p>
+                    <div class="orbital-telemetry-badge font-mono">
+                        <span class="telemetry-icon">⚡</span>
+                        <span class="telemetry-text">{{ cat.telemetry }}</span>
+                    </div>
+                    <ul class="skill-list font-mono">
+                        {% for skill in cat.skills %}<li class="skill-pill">{{ skill }}</li>{% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="orbital-floor-grid"></div>
+    </div>
 </section>
 {% endblock %}
+
+{% block page_js %}<script src="{% static 'resume/js/skills.js' %}"></script>{% endblock %}
