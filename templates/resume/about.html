@@ -1,8 +1,173 @@
 {% extends 'resume/base.html' %}
-{% load resume_tags %}
+{% load static resume_tags %}
+
+{% block title %}About — {{ resume.full_name }}{% endblock %}
 
 {% block content %}
-<section id="about" class="container">
-    <div class="gsap-reveal">{% masked_title "About Me" "1." %}<div class="divider"></div></div>
-</section>
+<div class="about-page-wrapper">
+    {# 1. Background & engineering philosophy #}
+    <section id="about" class="container about-intro-section">
+        <div class="about-grid">
+            <div class="gsap-reveal">
+                {% masked_title "About Me" "1." %}
+                <div class="divider"></div>
+                <p class="text-gray about-text">{{ resume.about_text }}</p>
+                <div class="font-mono text-gray skill-list text-sm">
+                    {% for bullet in resume.about_bullets %}<p><span style="color: #fff"></span> {{ bullet }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <div class="abstract-box hoverable gsap-reveal">
+                <div class="about-photo-wrapper">
+                    <img src="{% static 'img/profile.jpg' %}" alt="{{ resume.full_name }} — Backend Developer"
+                         class="about-photo-img" loading="eager">
+                </div>
+            </div>
+        </div>
+
+        {# Activity & profiles #}
+        <div class="telemetry-command-deck gsap-reveal font-mono">
+            <div class="telemetry-header">
+                <div class="telemetry-header-left">
+                    <span class="telemetry-live-dot"></span>
+                    <span class="telemetry-hud-tag">Current Activity &amp; Profiles</span>
+                </div>
+                <span class="telemetry-hud-status">{{ resume.status_line }}</span>
+            </div>
+
+            <div class="telemetry-grid">
+                <div class="telemetry-card hoverable">
+                    <div class="telemetry-card-top">
+                        <span class="card-badge">CURRENT FOCUS</span>
+                        <span class="card-indicator">Active</span>
+                    </div>
+                    <h3 class="telemetry-card-title">{{ resume.focus.title }}</h3>
+                    <p class="telemetry-card-text text-gray">{{ resume.focus.text }}</p>
+                    <div class="telemetry-meta-row text-gray">
+                        <span>CORE STACK:</span>
+                        <span class="meta-highlight">{{ resume.focus.stack }}</span>
+                    </div>
+                </div>
+
+                <div class="telemetry-card hoverable">
+                    <div class="telemetry-card-top">
+                        <span class="card-badge">GITHUB CODE</span>
+                        <span class="card-indicator">{{ project_count }} Project{{ project_count|pluralize }}</span>
+                    </div>
+                    <h3 class="telemetry-card-title">{{ resume.github_title }}</h3>
+                    <p class="telemetry-card-text text-gray">{{ resume.github_text }}</p>
+                    <div class="telemetry-actions-list">
+                        <a href="{{ contact.github }}" target="_blank" rel="noopener noreferrer" class="telemetry-btn hoverable">
+                            <span>View GitHub Repositories</span><span class="telemetry-arrow">↗</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="telemetry-card telemetry-card-comms hoverable">
+                    <div class="telemetry-card-top">
+                        <span class="card-badge">PROFESSIONAL PROFILE</span>
+                        <span class="card-indicator">Open to Roles</span>
+                    </div>
+                    <div class="linkedin-profile-preview">
+                        <img src="{% static 'img/profile.jpg' %}" alt="{{ resume.full_name }}" class="linkedin-preview-avatar">
+                        <div class="linkedin-preview-info">
+                            <div class="linkedin-preview-name">
+                                <span>{{ resume.full_name }}</span>
+                                <span class="linkedin-check" title="Verified Profile">✓</span>
+                            </div>
+                            <div class="linkedin-preview-role text-gray">{{ resume.profile_role }}</div>
+                        </div>
+                    </div>
+                    <p class="telemetry-card-text text-gray" style="margin-bottom: 1rem">{{ resume.profile_text }}</p>
+                    <div class="telemetry-actions-list">
+                        <a href="{{ contact.linkedin }}" target="_blank" rel="noopener noreferrer" class="telemetry-btn hoverable">
+                            <span>Connect on LinkedIn</span><span class="telemetry-arrow">↗</span>
+                        </a>
+                        <a href="mailto:{{ contact.email }}" class="telemetry-btn telemetry-btn-ping hoverable">
+                            <span>Send an Email</span><span class="telemetry-arrow">✉</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# 2. Engineering journey (auto-looping stages) #}
+    <section class="container timeline-section" id="experience" data-timeline>
+        <div class="timeline-header">
+            <div class="gsap-reveal">
+                {% masked_title "Engineering Journey" %}
+                <div class="divider"></div>
+            </div>
+            <div class="timeline-header-meta font-mono">
+                <div class="timeline-meta-pill">
+                    <span class="meta-pulse-dot"></span>
+                    <span class="meta-pill-text">STAGE 01/{{ resume.journey|length|stringformat:"02d" }} • AUTO-RUNNING</span>
+                </div>
+                <div class="timeline-jump-strip">
+                    {% for stage in resume.journey %}
+                    <button type="button" class="timeline-jump-pill hoverable{% if forloop.first %} is-active{% endif %}"
+                            aria-label="Jump to stage {{ stage.epoch }}" data-jump="{{ forloop.counter0 }}">{{ stage.epoch }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-stage-wrapper">
+            <button type="button" class="timeline-side-arrow timeline-arrow-prev hoverable font-mono"
+                    aria-label="Previous phase" title="Previous stage" data-stage-prev>‹</button>
+
+            <div class="timeline-carousel-shell">
+                <div class="timeline-cards-track" style="transform: translateX(-0%)">
+                    {% for stage in resume.journey %}
+                    <div class="timeline-card-slide{% if forloop.first %} is-active{% endif %}">
+                        <div class="timeline-stage-card hoverable">
+                            <div class="timeline-narrative-pane">
+                                <div class="stage-topbar font-mono">
+                                    <div class="stage-topbar-left">
+                                        <span class="stage-badge uppercase">{{ stage.category }}</span>
+                                        <span class="stage-date uppercase">{{ stage.date }}</span>
+                                    </div>
+                                    <span class="stage-step-tag text-gray">STAGE {{ stage.epoch }}</span>
+                                </div>
+
+                                <div class="stage-title-wrap">
+                                    <h3 class="stage-title uppercase text-glow">{{ stage.title }}</h3>
+                                    <div class="stage-headline font-mono text-gray uppercase">{{ stage.headline }}</div>
+                                </div>
+
+                                <p class="stage-summary text-gray">{{ stage.summary }}</p>
+
+                                <div class="stage-metrics-grid font-mono">
+                                    {% for label, value in stage.metrics %}
+                                    <div class="stage-metric-box">
+                                        <span class="metric-lbl text-gray">{{ label }}</span>
+                                        <span class="metric-val">{{ value }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="stage-tech-pills font-mono">
+                                    {% for tech in stage.tech %}<span class="stage-pill">{{ tech }}</span>{% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="timeline-simulation-pane">
+                                <div class="terminal-canvas-wrapper">
+                                    <canvas class="quantum-visualizer-canvas" data-visualizer="{{ stage.visualizer }}"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="button" class="timeline-side-arrow timeline-arrow-next hoverable font-mono"
+                    aria-label="Next phase" title="Next stage" data-stage-next>›</button>
+        </div>
+    </section>
+</div>
 {% endblock %}
+
+{% block page_js %}<script src="{% static 'resume/js/timeline.js' %}"></script>{% endblock %}

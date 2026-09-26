@@ -1,6 +1,7 @@
 import pytest
 from django.core.cache import cache
 from django.test import Client
+from django.utils.html import escape
 
 from apps.resume import content as resume_content
 from apps.resume.models import ContactMessage
@@ -56,6 +57,19 @@ def test_section_order_prev_next(client):
     assert (about['prev_url'], about['next_url'], about['next_key']) == ('/resume/', '/resume/work/', 'work')
     contact = client.get('/resume/contact/').context
     assert (contact['prev_url'], contact['next_url']) == ('/resume/skills/', '')
+
+
+@pytest.mark.django_db
+def test_about_has_journey_activity_and_visualizers(client):
+    from apps.projects.models import Project
+    Project.objects.create(title='Only One', description='d', tech_stack='Python')
+    html = client.get('/resume/about/').content.decode()
+    for stage in resume_content.RESUME['journey']:
+        assert escape(stage['title']) in html
+    for key in ('django', 'api', 'docker', 'installer'):
+        assert f'data-visualizer="{key}"' in html
+    assert '1 Project</span>' in html
+    assert 'img/profile.jpg' in html
 
 
 @pytest.mark.django_db
