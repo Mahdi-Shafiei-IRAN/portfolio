@@ -1,0 +1,342 @@
+/* Backend City — pixel UI around the game canvas (HUD, panels, touch pad).
+   Colours come from the Kenney palette the city art is drawn in. */
+
+:root {
+    --ink: #3f2631;          /* Kenney outline */
+    --paper: #fdf3e3;
+    --paper-dark: #f2dcc0;
+    --wood: #bd6c4a;
+    --wood-dark: #763b36;
+    --grass: #84c669;
+    --sky: #7cbef0;
+    --accent: #f5a045;
+    --night: #1c1a24;
+    --font: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --px: 3px;               /* one "pixel" of UI chrome */
+    --shadow: 0 var(--px) 0 var(--ink);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: var(--night);
+    color: var(--ink);
+    font-family: var(--font);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+}
+
+body.city { user-select: none; -webkit-user-select: none; }
+
+#city-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    display: block;
+    image-rendering: pixelated;
+    touch-action: none;
+    outline: none;
+}
+
+a { color: inherit; }
+
+/* ---------- pixel box ---------- */
+.hud-card, .hud-btn, .city-zone, .city-panel, .welcome-card, .dpad-btn, .action-btn {
+    background: var(--paper);
+    border: var(--px) solid var(--ink);
+    border-radius: 0;
+    box-shadow: var(--shadow);
+}
+
+/* ---------- HUD ---------- */
+.city-hud {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 10;
+}
+.city-hud > * { pointer-events: auto; }
+
+.hud-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px 6px 6px;
+    text-decoration: none;
+    min-width: 0;
+}
+.hud-card img {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+    border: 2px solid var(--ink);
+    background: var(--sky);
+    flex: none;
+}
+.hud-name { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.hud-name b { font-weight: 500; font-size: 14px; letter-spacing: .06em; white-space: nowrap; }
+.hud-name small { font-size: 12px; color: var(--wood-dark); white-space: nowrap; }
+
+.hud-actions { display: flex; gap: 8px; }
+.hud-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0 12px;
+    font: 500 13px/1 var(--font);
+    color: var(--ink);
+    text-decoration: none;
+    cursor: pointer;
+}
+.hud-icon { font-size: 20px; padding: 0; }
+.hud-btn:hover, .hud-btn:focus-visible { background: var(--paper-dark); }
+.hud-btn:active, .dpad-btn:active, .action-btn:active, .dpad-btn.is-down, .action-btn.is-down {
+    transform: translateY(var(--px));
+    box-shadow: none;
+}
+:focus-visible { outline: 2px dashed var(--accent); outline-offset: 3px; }
+
+.city-zone {
+    position: fixed;
+    top: 84px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 14px;
+    font: 500 12px/1 var(--font);
+    letter-spacing: .14em;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .4s;
+}
+.city-zone.is-shown { opacity: 1; }
+.city-panel:focus { outline: none; }
+
+/* ---------- touch controls (shown for coarse pointers) ---------- */
+.dpad, .action-btn { display: none; }
+@media (pointer: coarse), (hover: none) {
+    .dpad { display: grid; }
+    .action-btn { display: flex; }
+}
+body.touch .dpad { display: grid; }
+body.touch .action-btn { display: flex; }
+
+.dpad {
+    position: fixed;
+    left: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    grid-template: repeat(3, 52px) / repeat(3, 52px);
+    z-index: 10;
+    touch-action: none;
+}
+.dpad-btn {
+    font-size: 18px;
+    color: var(--ink);
+    padding: 0;
+    touch-action: none;
+    opacity: .9;
+}
+.dpad-up { grid-area: 1 / 2; }
+.dpad-left { grid-area: 2 / 1; }
+.dpad-right { grid-area: 2 / 3; }
+.dpad-down { grid-area: 3 / 2; }
+
+.action-btn {
+    position: fixed;
+    right: 20px;
+    bottom: calc(40px + env(safe-area-inset-bottom));
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font: 500 26px/1 var(--font);
+    background: var(--accent);
+    color: var(--ink);
+    z-index: 10;
+    touch-action: none;
+}
+
+/* ---------- panels (projects, skills, people, notice boards) ---------- */
+.city-panel-scrim, .city-welcome, .city-error {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgb(28 26 36 / .55);
+    z-index: 20;
+}
+.city-panel {
+    position: relative;
+    width: min(560px, 100%);
+    max-height: min(80vh, 640px);
+    max-height: min(80dvh, 640px);
+    overflow-y: auto;
+    padding: 22px 22px 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    user-select: text;
+    -webkit-user-select: text;
+    animation: pop .18s steps(3);
+}
+@keyframes pop { from { transform: scale(.9); opacity: 0; } }
+
+.panel-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--ink);
+    background: var(--paper-dark);
+    font: 500 16px/1 var(--font);
+    color: var(--ink);
+    cursor: pointer;
+}
+.panel-eyebrow {
+    margin: 0 0 6px;
+    font-size: 11px;
+    letter-spacing: .16em;
+    color: var(--wood-dark);
+    text-transform: uppercase;
+}
+.city-panel h2 {
+    margin: 0 44px 10px 0;
+    font: 500 20px/1.3 var(--font);
+    letter-spacing: .02em;
+}
+.city-panel p { margin: 0 0 12px; }
+.panel-cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border: 2px solid var(--ink);
+    margin: 4px 0 14px;
+    background: var(--paper-dark);
+}
+.panel-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; }
+.panel-tags li {
+    padding: 2px 8px;
+    border: 2px solid var(--ink);
+    background: var(--grass);
+    font-size: 12px;
+}
+.panel-list { margin: 0 0 14px; padding-left: 18px; }
+.panel-list li { margin-bottom: 4px; }
+.panel-list button {
+    font: inherit;
+    color: var(--wood-dark);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: left;
+}
+.panel-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+.panel-btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border: var(--px) solid var(--ink);
+    background: var(--accent);
+    box-shadow: var(--shadow);
+    font: 500 13px/1 var(--font);
+    color: var(--ink);
+    text-decoration: none;
+    cursor: pointer;
+}
+.panel-btn.is-quiet { background: var(--paper-dark); }
+.panel-btn:active { transform: translateY(var(--px)); box-shadow: none; }
+
+/* NPC dialogue sits at the bottom like an RPG text box. */
+.city-panel-scrim.is-dialogue { place-items: end center; background: transparent; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+.city-panel.is-dialogue { width: min(640px, 100%); min-height: 120px; animation: none; }
+.dialogue-name {
+    display: inline-block;
+    margin: 0 0 8px;
+    padding: 2px 10px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 12px;
+    letter-spacing: .12em;
+}
+.dialogue-next { float: right; font-size: 12px; color: var(--wood-dark); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ---------- welcome & error ---------- */
+.city-welcome { background: rgb(28 26 36 / .7); }
+.welcome-card {
+    width: min(460px, 100%);
+    padding: 26px 24px 20px;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.6;
+}
+.welcome-card h1 { margin: 0 0 14px; font: 500 22px/1.35 var(--font); letter-spacing: .12em; }
+.welcome-card p { margin: 0 0 12px; }
+.welcome-keys { color: var(--wood-dark); font-size: 13px; }
+.for-touch { display: none; }
+@media (pointer: coarse), (hover: none) {
+    .for-keys { display: none; }
+    .for-touch { display: block; }
+}
+kbd {
+    display: inline-block;
+    padding: 0 5px;
+    border: 2px solid var(--ink);
+    background: #fff;
+    font: 500 12px/1.5 var(--font);
+}
+.welcome-start {
+    margin: 8px 0 14px;
+    padding: 12px 34px;
+    border: var(--px) solid var(--ink);
+    background: var(--accent);
+    box-shadow: var(--shadow);
+    font: 500 16px/1 var(--font);
+    letter-spacing: .2em;
+    color: var(--ink);
+    cursor: pointer;
+}
+.welcome-start:active { transform: translateY(var(--px)); box-shadow: none; }
+.welcome-alt { font-size: 12px; margin: 0; }
+.city-error { background: var(--night); z-index: 30; }
+
+@media (max-width: 560px) {
+    :root { --px: 2px; }
+    .city-hud { top: 8px; left: 8px; right: 8px; }
+    .hud-card { padding: 4px 8px 4px 4px; gap: 8px; }
+    .hud-card img { width: 36px; height: 36px; }
+    .hud-name b { font-size: 12px; }
+    .hud-name small { font-size: 10px; }
+    .hud-btn { height: 40px; min-width: 40px; padding: 0 10px; }
+    .hud-btn-label { display: none; }
+    .city-zone { top: 62px; font-size: 11px; }
+}
+@media (max-width: 360px) {
+    .hud-name small { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .city-panel, .dialogue-next { animation: none; }
+}

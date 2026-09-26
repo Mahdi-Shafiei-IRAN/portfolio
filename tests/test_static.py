@@ -11,6 +11,7 @@ from config.settings import base
 PAGES = [
     '/', '/backend/', '/devops/', '/network/', '/about/', '/contact/',
     '/resume/', '/resume/about/', '/resume/work/', '/resume/skills/', '/resume/contact/',
+    '/city/',
 ]
 
 
@@ -40,8 +41,9 @@ def test_pages_render_with_manifest_storage(manifest_static, client, url):
     response = client.get(url)
     assert response.status_code == 200
     html = response.content.decode()
-    # Doodle pages load css/site.css, resume pages resume/css/resume.css — both hashed.
-    assert re.search(r'/static/(css/site|resume/css/resume)\.[0-9a-f]{12}\.css', html)
+    # Doodle pages load css/site.css, resume pages resume/css/resume.css, the city
+    # game/css/city.css — all hashed.
+    assert re.search(r'/static/(css/site|resume/css/resume|game/css/city)\.[0-9a-f]{12}\.css', html)
 
 
 def _bytes(root, exclude=None):
@@ -57,7 +59,7 @@ def test_static_source_stays_small():
 
 
 def test_vendor_stays_bounded():
-    """Self-hosted libraries (three.js, GSAP, Lenis) — raw size, before gzip."""
+    """Self-hosted libraries (three.js, GSAP, Lenis, KAPLAY) — raw size, before gzip."""
     vendor = Path(settings.BASE_DIR, 'static', 'vendor')
     total = _bytes(vendor)
     assert total < 1_600_000, f'static/vendor/ is {total:,} bytes'

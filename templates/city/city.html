@@ -11,7 +11,10 @@
     <link rel="stylesheet" href="{% static 'game/css/city.css' %}">
 </head>
 <body class="city">
-    <canvas id="city-canvas" aria-label="Backend City — a walkable map of Mahdi's projects"></canvas>
+    <canvas id="city-canvas" aria-label="Backend City — a walkable map of Mahdi's projects"
+            data-tiles="{% static 'game/img/tiles.png' %}"
+            data-chars="{% static 'game/img/chars.png' %}"
+            data-props="{% static 'game/img/props.png' %}"></canvas>
 
     {# ---------- HUD ---------- #}
     <div class="city-hud">
@@ -51,8 +54,9 @@
         <div class="welcome-card">
             <h1 id="welcome-title">WELCOME TO<br>BACKEND CITY</h1>
             <p>Every house here is one of Mahdi's projects.</p>
-            <p class="welcome-keys">Move with <kbd>WASD</kbd> / arrow keys or the on-screen pad.<br>
+            <p class="welcome-keys for-keys">Move with <kbd>WASD</kbd> or the arrow keys.<br>
                Press <kbd>E</kbd>, <kbd>Enter</kbd> or <kbd>Space</kbd> near buildings and people.</p>
+            <p class="welcome-keys for-touch">Walk with the pad, then tap <kbd>A</kbd> near buildings and people.</p>
             <button type="button" class="welcome-start" data-start>START</button>
             <p class="welcome-alt">Rather read? <a href="{{ city_payload.resumeUrl }}">Resume</a> ·
                <a href="{{ city_payload.roleUrls.backend }}#projects">Project list</a></p>
@@ -79,6 +83,7 @@
 
     {{ city_payload|json_script:"city-data" }}
     <script src="{% static 'vendor/kaplay-3001.0.19/kaplay.js' %}"></script>
+    <script src="{% static 'game/js/atlas.js' %}"></script>
     <script src="{% static 'game/js/map.js' %}"></script>
     <script src="{% static 'game/js/game.js' %}"></script>
 </body>
