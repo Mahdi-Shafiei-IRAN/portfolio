@@ -30,7 +30,6 @@
     const launchFill = card.querySelector('[data-launch-fill]');
     const rocket = card.querySelector('[data-rocket]');
     const senderName = card.querySelector('[data-sender-name]');
-    const audio = window.ResumeCore && window.ResumeCore.audio;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const LABELS = {
@@ -60,7 +59,6 @@
             : score < 70 ? 'In progress' : score < 100 ? 'Almost ready' : 'Ready to send';
     };
     form.addEventListener('input', updateSignal);
-    Object.values(fields).forEach((f) => f.addEventListener('focus', () => audio && audio.hover()));
 
     // Starlight rim glow follows the pointer.
     card.addEventListener('mousemove', (e) => {
@@ -116,7 +114,6 @@
                 .then(() => setTimeout(() => {
                     senderName.textContent = fields.name.value.trim();
                     setState('sent');
-                    if (audio) audio.click();
                 }, 300))
                 .catch((err) => setTimeout(() => {
                     setState('idle');

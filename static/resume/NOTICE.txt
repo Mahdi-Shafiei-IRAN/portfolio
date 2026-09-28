@@ -25,6 +25,8 @@ Modifications made for this site:
   core count.
   The hero headline scales with the window height on short screens so the
   whole hero fits.
+- The Web Audio sound effects and their mute button were removed; the site is
+  silent.
 - Cursor hover styles are set as classes from JavaScript instead of
   body:has(...:hover) selectors; pull-to-refresh is disabled on the page root.
 

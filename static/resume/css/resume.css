@@ -521,17 +521,6 @@ nav.dock-mode .nav-inner {
     gap: 1.5rem;
   }
 
-  .sound-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #fff;
-    font-size: inherit;
-  }
-
   .desktop-resume-link {
     display: inline-flex;
     align-items: center;

@@ -1,5 +1,5 @@
 /* Resume shell — vanilla port of DineshS36/portfolio (Apache-2.0): Layout,
- * Navbar, CustomCursor, Preloader, useAudio, useLenis, usePageTransitions and
+ * Navbar, CustomCursor, Preloader, useLenis, usePageTransitions and
  * useTextScramble, plus the wormhole arrival/return. Exposes window.ResumeCore
  * for the page scripts (they must not import each other; see the plan). */
 (() => {
@@ -18,84 +18,6 @@
         if (window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
         if (window.Observer) gsap.registerPlugin(Observer);
     }
-
-    // ---------------------------------------------------------------- audio
-    // Procedural Web Audio blips; muted until the sound button is pressed.
-    const audio = (() => {
-        let ctx = null;
-        let master = null;
-        let muted = true;
-
-        const init = () => {
-            if (ctx) return;
-            const AC = window.AudioContext || window.webkitAudioContext;
-            if (!AC) return;
-            ctx = new AC();
-            master = ctx.createGain();
-            master.gain.value = 0;
-            master.connect(ctx.destination);
-        };
-        const firstGesture = () => {
-            init();
-            if (ctx && ctx.state === 'suspended') ctx.resume();
-            window.removeEventListener('click', firstGesture);
-            window.removeEventListener('keydown', firstGesture);
-        };
-        window.addEventListener('click', firstGesture);
-        window.addEventListener('keydown', firstGesture);
-
-        const blip = (type, f0, f1, sweep, peak, length) => {
-            if (!ctx || muted || !master) return;
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            const t = ctx.currentTime;
-            osc.type = type;
-            osc.frequency.setValueAtTime(f0, t);
-            osc.frequency.exponentialRampToValueAtTime(f1, t + sweep);
-            gain.gain.setValueAtTime(0, t);
-            gain.gain.linearRampToValueAtTime(peak, t + 0.01);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + length);
-            osc.connect(gain);
-            gain.connect(master);
-            osc.start(t);
-            osc.stop(t + length);
-        };
-
-        return {
-            get muted() { return muted; },
-            toggle() {
-                init();
-                if (!ctx) return muted;
-                if (ctx.state === 'suspended') ctx.resume();
-                muted = !muted;
-                master.gain.setTargetAtTime(muted ? 0 : 0.3, ctx.currentTime, 0.05);
-                return muted;
-            },
-            hover: () => blip('sine', 400, 800, 0.05, 0.1, 0.1),
-            click: () => blip('triangle', 150, 50, 0.1, 0.2, 0.2),
-        };
-    })();
-
-    let lastHovered = null;
-    document.addEventListener('mouseover', (e) => {
-        const el = e.target.closest && e.target.closest('.hoverable');
-        if (el && el !== lastHovered) audio.hover();
-        lastHovered = el || null;
-    });
-    document.addEventListener('click', (e) => {
-        if (e.target.closest && e.target.closest('a, button, [role="button"]')) audio.click();
-    }, true);
-
-    const ICON_MUTED = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>';
-    const ICON_SOUND = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
-    document.querySelectorAll('[data-sound-toggle]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const muted = audio.toggle();
-            btn.innerHTML = muted ? ICON_MUTED : ICON_SOUND;
-            btn.setAttribute('aria-label', muted ? 'Unmute Audio' : 'Mute Audio');
-            audio.click();
-        });
-    });
 
     // --------------------------------------------------------------- cursor
     // Moon-phase cursor that follows the pointer (fine pointers only).
@@ -399,7 +321,7 @@
         if (observer) observer.enable();
     });
 
-    window.ResumeCore = { audio, stopLenis, startLenis, resetLenis, transitionTo, reduceMotion, page };
+    window.ResumeCore = { stopLenis, startLenis, resetLenis, transitionTo, reduceMotion, page };
 
     runPreloader(() => {
         reveal();
