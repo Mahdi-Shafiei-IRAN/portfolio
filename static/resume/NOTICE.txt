@@ -15,7 +15,14 @@ Modifications made for this site:
 - The contact form stores messages in the site's database instead of calling
   the Resend email API; the WhatsApp link was removed.
 - Timeline visualizers redrawn for Mahdi's stages in the same canvas style.
-- The Three.js black-hole shaders (GLSL) are used unchanged.
+- The Three.js black-hole shaders (GLSL) render the same image, restructured
+  for speed: the ray trace, which depends only on the camera, is cached per
+  pixel and redone only when the camera moves, while each frame shades the
+  animated disk noise and drifting stars on top of it; noise and star terms
+  that are multiplied to zero are skipped. Every device traces the full 200
+  steps (upstream used 120 on low-power devices, which lost the lensed ring).
+  The hero headline scales with the window height on short screens so the
+  whole hero fits.
 - Cursor hover styles are set as classes from JavaScript instead of
   body:has(...:hover) selectors; pull-to-refresh is disabled on the page root.
 

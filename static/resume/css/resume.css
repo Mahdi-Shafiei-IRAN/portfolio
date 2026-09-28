@@ -2100,6 +2100,33 @@ header.hero-container {
   }
 }
 
+/* Short screens (a 1366×768 laptop, a 1080p screen at 125 %): at full size the
+   hero needs about 720px of height, and a scroll on the hero moves on to the next
+   page, so the globe below the fold could never be seen. Up to 800px of height
+   the headline and spacing scale with it, matching the full-size layout at 800px. */
+@media (min-width: 769px) and (max-height: 800px) {
+  header.hero-container {
+    padding-top: 22vh;
+  }
+
+  .hero-subtitle {
+    margin-bottom: 2.5vh;
+  }
+
+  .hero-title-1 {
+    font-size: 17vh;
+  }
+
+  .hero-title-2 {
+    font-size: 15vh;
+    margin-bottom: 3vh;
+  }
+
+  .hero-globe-wrapper {
+    margin: 7vh 0 3vh;
+  }
+}
+
 /* ===== pages/about.css ===== */
 /* About Section */
 .about-intro-section {

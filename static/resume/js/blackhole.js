@@ -180,8 +180,11 @@ vec3 gravityStars(vec2 p, float time){
       starPos = streamPath(life, seed);
     }
 
-    float size = mix(0.0018, 0.0035, hash1(vec3(id, 41.0, 6.4)));
+    // The core, halo and both trail samples all lie within 0.3 of the star, and
+    // past 0.35 their Gaussians underflow to exactly 0, so far pixels skip them.
     float dist = length(p - starPos);
+    if(dist > 0.35) continue;
+    float size = mix(0.0018, 0.0035, hash1(vec3(id, 41.0, 6.4)));
     float core = exp(-dist*dist/(size*size));
     float halo = exp(-dist*dist/(size*size*16.0))*0.16;
 
@@ -215,6 +218,37 @@ vec3 accAt(vec3 p, vec3 v){
 }
 
 // ---------------- Accretion Disk Crossing ----------------
+// The swirling noise of the inner disk (qr < 18) is the only part of a disk hit
+// that changes over time; turb, streak and laneMask are 0.50, 0.95, 0.85 elsewhere.
+void diskNoise(vec3 q, float qr, float innerDetail, inout float turb, inout float streak, inout float laneMask){
+  float omega = uRotSign*1.1*uRotSpeed*pow(3.0/qr, 1.5);
+  float rot = omega*uTime;
+  float ca = cos(rot), sa = sin(rot);
+  vec3 qp = vec3(ca*q.x + sa*q.z, 0.0, -sa*q.x + ca*q.z);
+  vec2 rp = qp.xz/qr;
+
+  vec3 pc = vec3(rp.x*3.0, rp.y*3.0, qr*0.85);
+  vec3 warp = vec3(
+    fbm(pc*1.5),
+    fbm(pc*1.5 + vec3(5.2,1.3,2.8)),
+    fbm(pc*1.5 + vec3(9.7,4.1,7.3)));
+  turb = fbm(pc*2.0 + warp*1.5);
+  turb = mix(0.50, turb*1.7, innerDetail);
+  float streakN = fbm(vec3(rp.x*22.0, rp.y*22.0, qr*1.4));
+  streak = mix(0.95, mix(0.55, 1.15, smoothstep(0.25, 0.85, streakN)), innerDetail);
+  float lane = fbm(vec3(rp.x*5.0, rp.y*5.0, qr*0.55) + warp*0.8);
+  laneMask = mix(0.85, mix(0.50, 1.30, smoothstep(0.15, 0.80, lane)), innerDetail);
+}
+
+#ifdef GBUFFER
+// Up to two hits on the animated inner disk: where they are (xz) and how much of
+// the pixel they light, so the shading pass only has to add the noise on top.
+float gHits = 0.0;
+vec4 gHitPos = vec4(0.0);
+vec3 gHitW0 = vec3(0.0);
+vec3 gHitW1 = vec3(0.0);
+#endif
+
 bool diskCross(vec3 a, vec3 b, vec3 rayDir, inout vec3 col, inout float trans){
   if(a.y*b.y > 0.0) return false;
   float t = abs(a.y)/(abs(a.y) + abs(b.y) + 1e-5);
@@ -227,28 +261,20 @@ bool diskCross(vec3 a, vec3 b, vec3 rayDir, inout vec3 col, inout float trans){
   float flux = max(pow(x/3.0, -3.0)*(1.0 - sqrt(3.0/x)), 0.0);
   float temp = pow(flux*10.0, 0.25);
 
-  float omega = uRotSign*1.1*uRotSpeed*pow(3.0/qr, 1.5);
-  float rot = omega*uTime;
-  float ca = cos(rot), sa = sin(rot);
-  vec3 qp = vec3(ca*q.x + sa*q.z, 0.0, -sa*q.x + ca*q.z);
-  vec2 rp = qp.xz/qr;
-
-  vec3 pc = vec3(rp.x*3.0, rp.y*3.0, qr*0.85);
-  vec3 warp = vec3(
-    fbm(pc*1.5),
-    fbm(pc*1.5 + vec3(5.2,1.3,2.8)),
-    fbm(pc*1.5 + vec3(9.7,4.1,7.3)));
-  float turb = fbm(pc*2.0 + warp*1.5);
   float innerDetail = 1.0 - smoothstep(4.0, 18.0, qr);
-  turb = mix(0.50, turb*1.7, innerDetail);
-  float streakN = fbm(vec3(rp.x*22.0, rp.y*22.0, qr*1.4));
-  float streak = mix(0.95, mix(0.55, 1.15, smoothstep(0.25, 0.85, streakN)), innerDetail);
-  float lane = fbm(vec3(rp.x*5.0, rp.y*5.0, qr*0.55) + warp*0.8);
-  float laneMask = mix(0.85, mix(0.50, 1.30, smoothstep(0.15, 0.80, lane)), innerDetail);
+  float turb = 0.50;
+  float streak = 0.95;
+  float laneMask = 0.85;
+#ifndef GBUFFER
+  // From qr = 18 outwards innerDetail is exactly 0 and every mix() in diskNoise
+  // returns its first argument, so the six fbm calls only run where they show.
+  if(innerDetail > 0.0) diskNoise(q, qr, innerDetail, turb, streak, laneMask);
+#endif
   float radialGain = mix(0.38, 1.0, innerDetail);
 
   float I = flux*11.0*turb*streak*laneMask*radialGain;
-  I += exp(-pow((qr-3.1)*3.0, 2.0))*2.8;
+  float ring = exp(-pow((qr-3.1)*3.0, 2.0))*2.8;
+  I += ring;
 
   float outerFade = 1.0 - smoothstep(uDout-14.0, uDout, qr);
   I *= outerFade;
@@ -263,15 +289,29 @@ bool diskCross(vec3 a, vec3 b, vec3 rayDir, inout vec3 col, inout float trans){
 
   vec3 dcol = blackbody(temp*dop*g) * I * (dop*dop*dop) * g * uDiskBright;
   float alpha = mix(uOpFar, uOpNear, 1.0 - smoothstep(4.0, 13.0, qr)) * outerFade;
+#ifdef GBUFFER
+  if(innerDetail > 0.0){
+    // Same sum as below, split into the steady ring glow and the noise weight.
+    vec3 w = trans * alpha * (blackbody(temp*dop*g) * (dop*dop*dop) * g * uDiskBright * outerFade);
+    col += w * ring;
+    vec3 noiseW = w * (flux*11.0*radialGain);
+    if(gHits < 0.5){ gHitPos.xy = q.xz; gHitW0 = noiseW; }
+    else if(gHits < 1.5){ gHitPos.zw = q.xz; gHitW1 = noiseW; }
+    gHits += 1.0;
+  } else {
+    col += trans * alpha * dcol;
+  }
+#else
   col += trans * alpha * dcol;
+#endif
   trans *= 1.0 - alpha;
   if(trans < 0.02){ trans = 0.0; return true; }
   return false;
 }
 
 // ---------------- Raymarcher Main Loop ----------------
-void main(){
-  vec2 p = (gl_FragCoord.xy - 0.5*uRes)/uRes.y;
+// Everything but the drifting stars; with GBUFFER the inner-disk noise is left out.
+vec3 traceRay(vec2 p){
   vec3 ro = uCamPos;
   vec3 ww = normalize(uCamTarget - ro);
   vec3 uu = normalize(cross(ww, vec3(0.0,1.0,0.0)));
@@ -342,11 +382,66 @@ void main(){
   // Photon ring perigee critical curve
   vec3 ringAdd = vec3(1.0,0.92,0.80) * exp(-pow((minR-1.55)*4.0, 2.0)) * 0.05;
 
-  vec3 outCol = col + bgAdd + ringAdd;
+  return col + bgAdd + ringAdd;
+}
+
+#if defined(GBUFFER)
+// Cached pass: depends only on the camera, so it is traced once per camera pose.
+layout(location = 0) out highp vec4 outSteady;
+layout(location = 1) out highp vec4 outHitPos;
+layout(location = 2) out highp vec4 outHitW0;
+layout(location = 3) out highp vec4 outHitW1;
+void main(){
+  vec2 p = (gl_FragCoord.xy - 0.5*uRes)/uRes.y;
+  outSteady = vec4(traceRay(p), gHits);
+  outHitPos = gHitPos;
+  outHitW0 = vec4(gHitW0, 0.0);
+  outHitW1 = vec4(gHitW1, 0.0);
+}
+#elif defined(SHADE)
+// Per-frame pass: the cached image plus the animated disk noise and stars.
+uniform highp sampler2D tSteady;
+uniform highp sampler2D tHitPos;
+uniform highp sampler2D tHitW0;
+uniform highp sampler2D tHitW1;
+float noiseAt(vec2 xz){
+  vec3 q = vec3(xz.x, 0.0, xz.y);
+  float qr = length(q.xz);
+  float innerDetail = 1.0 - smoothstep(4.0, 18.0, qr);
+  float turb = 0.50;
+  float streak = 0.95;
+  float laneMask = 0.85;
+  diskNoise(q, qr, innerDetail, turb, streak, laneMask);
+  return turb*streak*laneMask;
+}
+void main(){
+  vec2 p = (gl_FragCoord.xy - 0.5*uRes)/uRes.y;
+  ivec2 px = ivec2(gl_FragCoord.xy);
+  vec4 steady = texelFetch(tSteady, px, 0);
+  vec3 outCol;
+  if(steady.a > 2.5){
+    outCol = traceRay(p);   // more hits than the cache holds: trace this pixel fully
+  } else {
+    outCol = steady.rgb;
+    if(steady.a > 0.5){
+      vec4 hitPos = texelFetch(tHitPos, px, 0);
+      outCol += texelFetch(tHitW0, px, 0).rgb * noiseAt(hitPos.xy);
+      if(steady.a > 1.5) outCol += texelFetch(tHitW1, px, 0).rgb * noiseAt(hitPos.zw);
+    }
+  }
   outCol += gravityStars(p, uTime);
   outCol = clamp(max(outCol, vec3(0.0)), vec3(0.0), vec3(64.0));
   gl_FragColor = vec4(outCol, 1.0);
 }
+#else
+void main(){
+  vec2 p = (gl_FragCoord.xy - 0.5*uRes)/uRes.y;
+  vec3 outCol = traceRay(p);
+  outCol += gravityStars(p, uTime);
+  outCol = clamp(max(outCol, vec3(0.0)), vec3(0.0), vec3(64.0));
+  gl_FragColor = vec4(outCol, 1.0);
+}
+#endif
 `;
 
 const COMPOSITE_VERT = /* glsl */`
@@ -431,7 +526,11 @@ function start() {
     const fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
     const FIXED_PARAMS = {
-        uSteps: isLowPowerDevice ? 120 : 200,
+        // Every device gets the full 200 steps: with fewer, the rays that bend
+        // around the hole stop before they reach the far side of the disk, so the
+        // lensed ring disappears and only the edge-on disk is left. The cache
+        // below only retraces when the camera moves, which keeps this affordable.
+        uSteps: 200,
         uDin: 2.75,
         uDout: 40.0,
         uDopMax: 1.85,
@@ -473,7 +572,43 @@ function start() {
     const fsMat = new THREE.ShaderMaterial({
         vertexShader: RAY_VERT, fragmentShader: RAY_FRAG, uniforms, depthTest: false, depthWrite: false,
     });
-    fsScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), fsMat));
+    const quad = new THREE.PlaneGeometry(2, 2);
+    const screen = new THREE.Mesh(quad, fsMat);
+    fsScene.add(screen);
+
+    // Cached rendering. The rays' paths through curved space depend only on the
+    // camera, which stands still unless the pointer moves; what animates is the
+    // inner disk's swirl and the drifting stars. So the full trace (GBUFFER) is
+    // kept per pixel and redone only when the camera moves, and each frame shades
+    // just the swirl and stars on top of it (SHADE): the same image, matching the
+    // full shader to float rounding, for a fraction of the GPU time. Orbit mode,
+    // and GPUs without four float render targets, trace every frame as before.
+    const gl = renderer.getContext();
+    const canCache = !!gl.getExtension('EXT_color_buffer_float') && gl.getParameter(gl.MAX_DRAW_BUFFERS) >= 4;
+    const traceCamPos = { value: new THREE.Vector3() };
+    const shadeCamPos = { value: new THREE.Vector3() };
+    const traceMat = new THREE.ShaderMaterial({
+        glslVersion: THREE.GLSL3,
+        vertexShader: RAY_VERT,
+        fragmentShader: '#define GBUFFER\n' + RAY_FRAG,
+        uniforms: { ...uniforms, uCamPos: traceCamPos },
+        depthTest: false,
+        depthWrite: false,
+    });
+    const shadeUniforms = {
+        ...uniforms,
+        uCamPos: shadeCamPos,
+        tSteady: { value: null },
+        tHitPos: { value: null },
+        tHitW0: { value: null },
+        tHitW1: { value: null },
+    };
+    const shadeMat = new THREE.ShaderMaterial({
+        vertexShader: RAY_VERT, fragmentShader: '#define SHADE\n' + RAY_FRAG, uniforms: shadeUniforms,
+        depthTest: false, depthWrite: false,
+    });
+    const traceScene = new THREE.Scene();
+    traceScene.add(new THREE.Mesh(quad, traceMat));
 
     const camera = new THREE.PerspectiveCamera(FIXED_PARAMS.fov, window.innerWidth / window.innerHeight, 0.01, 200);
     camera.position.set(0, 1.05, 23.98);
@@ -555,6 +690,9 @@ function start() {
             mouseX = 0;
             mouseY = 0;
             if (badge) { badge.remove(); badge = null; }
+            // The cache still holds the view from before orbiting: retrace from here.
+            if (shown) shown.valid = false;
+            nextRow = -1;
         }
         // Wheel inside orbit mode zooms; lock scrolling (and section changes) meanwhile,
         // then restore whatever lock was there before (e.g. an open mobile drawer).
@@ -595,9 +733,143 @@ function start() {
         renderer.getDrawingBufferSize(dbSize);
         uniforms.uRes.value.copy(dbSize);
         compositePass.uniforms.uRes.value.copy(dbSize);
+        // A new size needs a fresh trace (the slice timing is per pixel, so it holds).
+        for (const cache of [shown, spare]) {
+            if (!cache) continue;
+            cache.target.setSize(dbSize.x, dbSize.y);
+            cache.valid = false;
+        }
+        nextRow = -1;
     };
+
+    const newCache = () => ({
+        target: new THREE.WebGLRenderTarget(dbSize.x, dbSize.y, {
+            count: 4,
+            type: THREE.FloatType,
+            minFilter: THREE.NearestFilter,
+            magFilter: THREE.NearestFilter,
+            depthBuffer: false,
+        }),
+        cam: new THREE.Vector3(),
+        valid: false,
+    });
+    let shown = null;     // cache on screen
+    let spare = null;     // cache being retraced while the camera moves
+    let nextRow = -1;     // next row of `spare` to trace; -1 while not retracing
+
     handleResize();
     window.addEventListener('resize', handleResize);
+    if (canCache) shown = newCache();
+
+    const trace = (cache, y0, y1) => {
+        const target = cache.target;
+        target.scissor.set(0, y0, target.width, y1 - y0);
+        target.scissorTest = y0 > 0 || y1 < target.height;
+        traceCamPos.value.copy(cache.cam);
+        renderer.setRenderTarget(target);
+        renderer.render(traceScene, fsCam);
+        renderer.setRenderTarget(null);
+    };
+    const showCache = (cache) => {
+        shown = cache;
+        shadeCamPos.value.copy(cache.cam);
+        const [steady, hitPos, hitW0, hitW1] = cache.target.textures;
+        shadeUniforms.tSteady.value = steady;
+        shadeUniforms.tHitPos.value = hitPos;
+        shadeUniforms.tHitW0.value = hitW0;
+        shadeUniforms.tHitW1.value = hitW1;
+    };
+
+    // While the camera moves, the retrace goes into the spare cache in horizontal
+    // slices of about SLICE_MS of GPU time per frame, so a slow GPU never stalls
+    // the page, and the finished trace replaces the shown one at once. Slices are
+    // timed with EXT_disjoint_timer_query when present; otherwise one fence times
+    // the first full retrace against the usual frame gap.
+    const SLICE_MS = 8;
+    const MIN_ROWS = 8;
+    const CAM_EPS = 0.001;   // world units: well under a tenth of a pixel of parallax
+    const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+    let msPerPixel = 0;      // 0 = not measured yet: retrace everything at once
+    let timing = null;
+    let calmGap = 16.7;      // usual time between frames that trace nothing
+
+    const sliceRows = () => (msPerPixel
+        ? THREE.MathUtils.clamp(Math.floor(SLICE_MS / (msPerPixel * dbSize.x)), MIN_ROWS, dbSize.y)
+        : dbSize.y);
+
+    const traceTimed = (cache, y0, y1) => {
+        if (timing || (!timer && msPerPixel)) {
+            trace(cache, y0, y1);
+        } else if (timer) {
+            const query = gl.createQuery();
+            gl.beginQuery(timer.TIME_ELAPSED_EXT, query);
+            trace(cache, y0, y1);
+            gl.endQuery(timer.TIME_ELAPSED_EXT);
+            timing = { query, pixels: (y1 - y0) * dbSize.x };
+        } else {
+            trace(cache, y0, y1);
+            timing = {
+                sync: gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0),
+                pixels: (y1 - y0) * dbSize.x,
+                t0: performance.now(),
+            };
+        }
+    };
+    const readTiming = () => {
+        if (!timing) return;
+        let ms = 0;
+        if (timing.query) {
+            if (!gl.getQueryParameter(timing.query, gl.QUERY_RESULT_AVAILABLE)) return;
+            if (!gl.getParameter(timer.GPU_DISJOINT_EXT)) ms = gl.getQueryParameter(timing.query, gl.QUERY_RESULT) / 1e6;
+            gl.deleteQuery(timing.query);
+        } else {
+            if (gl.getSyncParameter(timing.sync, gl.SYNC_STATUS) !== gl.SIGNALED) return;
+            ms = Math.max(0.1, performance.now() - timing.t0 - calmGap);
+            gl.deleteSync(timing.sync);
+        }
+        if (ms > 0) {
+            const perPixel = ms / timing.pixels;
+            msPerPixel = msPerPixel ? msPerPixel + (perPixel - msPerPixel) * 0.3 : perPixel;
+        }
+        timing = null;
+    };
+
+    // Returns whether this frame traced anything.
+    const updateCache = () => {
+        readTiming();
+        const h = dbSize.y;
+        if (!shown.valid) {
+            // First frame or a new size: trace it all now (the frame is new anyway).
+            shown.cam.copy(camera.position);
+            trace(shown, 0, h);
+            shown.valid = true;
+            showCache(shown);
+            return true;
+        }
+        if (nextRow < 0) {
+            if (shown.cam.distanceTo(camera.position) < CAM_EPS) return false;
+            if (sliceRows() >= h) {
+                shown.cam.copy(camera.position);
+                traceTimed(shown, 0, h);
+                showCache(shown);
+                return true;
+            }
+            if (!spare) spare = newCache();
+            spare.cam.copy(camera.position);
+            nextRow = 0;
+        }
+        const end = Math.min(h, nextRow + sliceRows());
+        traceTimed(spare, nextRow, end);
+        nextRow = end;
+        if (nextRow >= h) {
+            spare.valid = true;
+            const old = shown;
+            showCache(spare);
+            spare = old;
+            nextRow = -1;
+        }
+        return true;
+    };
 
     const initTime = performance.now();
     let lastRenderMs = 0;
@@ -636,7 +908,14 @@ function start() {
         compositePass.uniforms.uTime.value = elapsed;
 
         const minFrameMs = interactive ? 16 : (isLowPowerDevice ? 28 : 16);
-        if (now - lastRenderMs >= minFrameMs) {
+        // 4 ms of slack: callbacks land a little early or late, and skipping one
+        // that is only just early dropped a frame (and paced 120/144 Hz unevenly).
+        if (now - lastRenderMs >= minFrameMs - 4) {
+            const cached = canCache && !interactive;
+            if (cached && !updateCache() && lastRenderMs) {
+                calmGap += (Math.min(now - lastRenderMs, 100) - calmGap) * 0.1;
+            }
+            screen.material = cached ? shadeMat : fsMat;
             bloomPass.enabled = halfFloatOK && interactive;
             composer.render();
             lastRenderMs = now;
@@ -645,7 +924,7 @@ function start() {
     tick();
 
     canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); cancelAnimationFrame(frameId); }, false);
-    canvas.addEventListener('webglcontextrestored', () => { handleResize(); tick(); }, false);
+    canvas.addEventListener('webglcontextrestored', () => { timing = null; handleResize(); tick(); }, false);
 }
 
 if (canvas && wrapper) start();
