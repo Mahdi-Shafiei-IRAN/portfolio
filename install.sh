@@ -194,6 +194,7 @@ SECRET_KEY=$(rand 64)
 DEBUG=False
 ALLOWED_HOSTS=${ALLOWED}
 WEB_PORT=${WEB_PORT}
+SSL_EMAIL=${ADMIN_EMAIL}
 
 # Database (web container reaches Postgres at host 'db')
 DATABASE_URL=postgres://portfolio:${PG_PASS}@db:5432/portfolio
@@ -206,6 +207,7 @@ EOF
 else
     sed -i "s|^ALLOWED_HOSTS=.*|ALLOWED_HOSTS=${ALLOWED}|" .env
     grep -q '^WEB_PORT=' .env || echo "WEB_PORT=${WEB_PORT}" >> .env
+    grep -q '^SSL_EMAIL=' .env || echo "SSL_EMAIL=${ADMIN_EMAIL}" >> .env
     success "Existing .env preserved (updated ALLOWED_HOSTS)"
 fi
 
@@ -267,22 +269,35 @@ fi
 # ══════════════════════════════════════════════
 step "Obtaining SSL Certificate"
 
-CB_DOMAINS=(-d "$DOMAIN")
-[[ -n "$WWW_DOMAIN" ]] && CB_DOMAINS+=(-d "$WWW_DOMAIN")
+# Only names that resolve go into the request: one without a DNS record (a www.
+# that was never added, say) makes Let's Encrypt refuse the whole certificate.
+CB_DOMAINS=()
+for h in "$DOMAIN" $WWW_DOMAIN; do
+    if getent ahostsv4 "$h" >/dev/null 2>&1; then
+        CB_DOMAINS+=(-d "$h")
+    else
+        warn "${h} has no DNS record yet — left out of the certificate"
+    fi
+done
 
-info "Requesting certificate for ${DOMAIN}${WWW_DOMAIN:+ + }${WWW_DOMAIN}..."
-if certbot --nginx "${CB_DOMAINS[@]}" \
-    --non-interactive --agree-tos --email "$ADMIN_EMAIL" --redirect 2>&1 | tail -8; then
-    success "HTTPS active — https://${DOMAIN}"
-    SSL_OK=true
+SSL_OK=false
+if [[ ${#CB_DOMAINS[@]} -eq 0 ]]; then
+    warn "No domain resolves yet. Site is live over HTTP."
 else
-    warn "SSL issuance failed (DNS not pointed here yet?). Site is live over HTTP."
-    warn "After DNS propagates, run:  portfolio  → Domain & SSL → Issue SSL"
-    SSL_OK=false
+    info "Requesting certificate for ${CB_DOMAINS[*]//-d /}..."
+    if certbot --nginx "${CB_DOMAINS[@]}" --expand \
+        --non-interactive --agree-tos --email "$ADMIN_EMAIL" --redirect 2>&1 | tail -8; then
+        success "HTTPS active — https://${DOMAIN}"
+        SSL_OK=true
+    else
+        warn "SSL issuance failed (DNS not pointed here yet?). Site is live over HTTP."
+    fi
 fi
+$SSL_OK || warn "After DNS resolves, run:  portfolio ssl"
 
-# certbot's systemd timer handles renewal; add a cron fallback if it's absent.
-systemctl enable certbot.timer >/dev/null 2>&1 \
+# certbot's systemd timer renews twice a day and reloads nginx; a daily cron job
+# stands in where the timer is missing (certbot from snap or pip).
+systemctl enable --now certbot.timer >/dev/null 2>&1 \
     || ( crontab -l 2>/dev/null | grep -v 'certbot renew'; echo "0 3 * * * certbot renew --quiet" ) | crontab -
 success "Auto-renewal scheduled"
 
@@ -318,4 +333,4 @@ echo ""
 echo -e "  ${DIM}Add your projects at${NC} ${CYAN}${PROTO}://${DOMAIN}/admin/projects/project/${NC}"
 echo -e "  ${DIM}Add a hero video to${NC} static/video/hero.webm ${DIM}(see static/video/README.md)${NC}"
 echo ""
-$SSL_OK || echo -e "  ${YELLOW}⚠  SSL pending — run 'portfolio' once DNS resolves to issue the certificate.${NC}\n"
+$SSL_OK || echo -e "  ${YELLOW}⚠  SSL pending — run 'portfolio ssl' once DNS resolves to issue the certificate.${NC}\n"

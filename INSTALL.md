@@ -50,15 +50,19 @@ Then it automatically:
 6. Adds a **host Nginx** site that routes your domain → `127.0.0.1:<port>` and
    serves `/static/` + `/media/` from disk.
 7. Obtains a Let's Encrypt certificate with `certbot --nginx` (adds the
-   HTTP→HTTPS redirect).
+   HTTP→HTTPS redirect) for the hostnames that already resolve — a `www.` with
+   no DNS record is left out instead of failing the whole certificate.
 8. Enables SSL auto-renewal (certbot systemd timer, cron fallback).
 9. Installs the `portfolio` management command.
 
 Because it reuses the shared host Nginx on ports 80/443 rather than binding them
-itself, it **coexists with other sites** already running on the server.
+itself, it **coexists with other sites** already running on the server. If
+another site's nginx config also lists your domain, the `portfolio ssl` command
+names it: remove the domain there, or nginx may keep serving that site's
+certificate.
 
 > If DNS hasn't propagated yet, the site still comes up over HTTP and SSL is
-> skipped — run `portfolio` → **Domain & SSL** → *Issue SSL* once it resolves.
+> skipped — run `portfolio ssl` once it resolves.
 
 ## Managing the site — `portfolio`
 
@@ -85,7 +89,10 @@ Type `portfolio` on the server for a menu:
 ```
 
 - **Update** pulls the latest code, rebuilds, and migrates — your database,
-  media uploads, `.env`, and SSL certificate are preserved.
+  media uploads, `.env`, and SSL certificate are preserved. If the site has no
+  certificate yet, it tries to issue one.
+- Without the menu (e.g. over SSH): `portfolio update`, `portfolio ssl`
+  (issue or re-issue the certificate), `portfolio status`.
 - **Backup** writes `backups/portfolio-<timestamp>.tar.gz` (database dump +
   uploaded media); **Restore** loads one back.
 

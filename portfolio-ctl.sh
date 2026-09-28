@@ -44,6 +44,47 @@ section() { echo -e "\n  ${BOLD}${BLUE}▸ $1${NC}"; echo -e "  ${DIM}───�
 
 domain() { get_env ALLOWED_HOSTS | cut -d, -f1; }
 
+# ── SSL: Let's Encrypt through certbot's nginx plugin ─────────────────────────
+# Only hostnames that resolve go into the request: one name without a DNS record
+# (a www. that was never added, say) makes Let's Encrypt refuse the whole thing.
+ssl_hosts() {
+    local h
+    for h in $(get_env ALLOWED_HOSTS | tr ',' ' '); do
+        getent ahostsv4 "$h" >/dev/null 2>&1 && echo "$h"
+    done
+}
+ssl_email() { local e; e=$(get_env SSL_EMAIL); echo "${e:-admin@$(domain)}"; }
+
+# certbot's systemd timer renews certificates twice a day and reloads nginx; a
+# daily cron job stands in where the timer is missing (certbot from snap or pip).
+enable_renewal() {
+    systemctl enable --now certbot.timer >/dev/null 2>&1 \
+        || ( crontab -l 2>/dev/null | grep -v 'certbot renew'; echo "0 3 * * * certbot renew --quiet" ) | crontab -
+}
+
+issue_ssl() {
+    local hosts h args=() clash
+    hosts=$(ssl_hosts)
+    if [[ -z "$hosts" ]]; then
+        fail "No domain in ALLOWED_HOSTS resolves yet — point its DNS A record here first"
+        return 1
+    fi
+    for h in $hosts; do args+=(-d "$h"); done
+    # Another site on this nginx claiming the same name keeps serving its own certificate.
+    clash=$(grep -lE "server_name[^;]*[[:space:]]$(domain)[[:space:];]" \
+        /etc/nginx/sites-enabled/* /etc/nginx/conf.d/*.conf 2>/dev/null | grep -v '/portfolio$')
+    [[ -n "$clash" ]] && warn "Also claimed by ${clash//$'\n'/, } — remove $(domain) there, or nginx may serve that site's certificate"
+    info "Requesting a Let's Encrypt certificate for: $(echo $hosts)"
+    certbot --nginx "${args[@]}" --expand --non-interactive --agree-tos \
+        --email "$(ssl_email)" --redirect 2>&1 | tail -6
+    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+        fail "SSL failed — check that DNS points here and port 80 is reachable"
+        return 1
+    fi
+    enable_renewal
+    ok "SSL enabled — https://$(domain) (renews automatically)"
+}
+
 web_status() {
     local s; s=$($COMPOSE ps --status running --services 2>/dev/null | grep -c '^web$')
     [[ "$s" == "1" ]] && echo -e "${GREEN}● running${NC}" || echo -e "${RED}● stopped${NC}"
@@ -98,17 +139,7 @@ menu_domain() {
             ok "Domain changed to ${new} — now issue SSL (option 2)"
             pause ;;
         2)
-            local d w_d args; d=$(domain)
-            args=(-d "$d")
-            w_d=$(get_env ALLOWED_HOSTS | tr ',' '\n' | grep -E "^www\." | head -1)
-            [[ -n "$w_d" ]] && args+=(-d "$w_d")
-            info "Requesting certificate for ${d}..."
-            if certbot --nginx "${args[@]}" --non-interactive --agree-tos \
-                --email "admin@${d}" --redirect 2>&1 | tail -6; then
-                ok "SSL enabled — https://${d}"
-            else
-                fail "SSL failed — check that DNS points here"
-            fi
+            issue_ssl
             pause ;;
         0) break ;;
         esac
@@ -232,11 +263,20 @@ menu_update() {
     echo ""
     read -rp "$(echo -e "  ${YELLOW}Proceed? [y/N]:${NC} ")" c
     [[ ! "$c" =~ ^[Yy]$ ]] && return
+    do_update
+    pause
+}
 
+do_update() {
     info "Pulling latest code (.env, DB, media and host nginx site are preserved)..."
-    if ! git -C "$INSTALL_DIR" pull --rebase 2>&1 | tail -3; then
-        fail "git pull failed — check connectivity / local changes"; pause; return
+    git -C "$INSTALL_DIR" pull --rebase 2>&1 | tail -3
+    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+        fail "git pull failed — check connectivity / local changes"; return 1
     fi
+    # Keep this command itself current too (a rename, so the running copy is untouched).
+    cp "${INSTALL_DIR}/portfolio-ctl.sh" /usr/local/bin/portfolio.new \
+        && chmod 755 /usr/local/bin/portfolio.new \
+        && mv /usr/local/bin/portfolio.new /usr/local/bin/portfolio
 
     info "Rebuilding and restarting..."
     $COMPOSE up -d --build 2>&1 | tail -5
@@ -247,12 +287,16 @@ menu_update() {
     # (deploy/entrypoint.sh); if that fails the web status check below reports it.
     patch_nginx_static
 
+    # An install whose certificate was never issued gets another try here, and
+    # renewal is (re)enabled either way.
+    if https_active; then enable_renewal; else issue_ssl; fi
+
     if [[ "$(web_status)" == *running* ]]; then
         ok "Update complete — web is running"
     else
         warn "Web container not running — check: portfolio → Service → logs"
+        return 1
     fi
-    pause
 }
 
 # ══════════════════════════════════════════════
@@ -346,6 +390,15 @@ menu_uninstall() {
     echo ""
     exit 0
 }
+
+# Without the menu (e.g. over SSH): portfolio update | ssl | status
+case "${1:-}" in
+    update) do_update; exit $? ;;
+    ssl)    issue_ssl; exit $? ;;
+    status) show_status; exit 0 ;;
+    '')     ;;
+    *)      echo "Usage: portfolio [update|ssl|status]"; exit 1 ;;
+esac
 
 # ══════════════════════════════════════════════
 #  MAIN MENU
