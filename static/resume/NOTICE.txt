@@ -20,7 +20,9 @@ Modifications made for this site:
   pixel and redone only when the camera moves, while each frame shades the
   animated disk noise and drifting stars on top of it; noise and star terms
   that are multiplied to zero are skipped. Every device traces the full 200
-  steps (upstream used 120 on low-power devices, which lost the lensed ring).
+  steps (upstream used 120 on low-power devices, which lost the lensed ring),
+  and the resolution follows the GPU's measured speed instead of the CPU
+  core count.
   The hero headline scales with the window height on short screens so the
   whole hero fits.
 - Cursor hover styles are set as classes from JavaScript instead of

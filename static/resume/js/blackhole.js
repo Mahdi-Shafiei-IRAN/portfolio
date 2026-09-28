@@ -690,10 +690,10 @@ function start() {
             mouseX = 0;
             mouseY = 0;
             if (badge) { badge.remove(); badge = null; }
-            // The cache still holds the view from before orbiting: retrace from here.
-            if (shown) shown.valid = false;
-            nextRow = -1;
         }
+        // Orbit mode may render at a lower pixel ratio; on the way back the cache,
+        // which still holds the view from before orbiting, is retraced from here.
+        handleResize();
         // Wheel inside orbit mode zooms; lock scrolling (and section changes) meanwhile,
         // then restore whatever lock was there before (e.g. an open mobile drawer).
         const core = window.ResumeCore;
@@ -717,13 +717,32 @@ function start() {
     canvas.addEventListener('pointerdown', () => { if (interactive) canvas.style.cursor = 'grabbing'; });
     window.addEventListener('pointerup', () => { if (interactive) canvas.style.cursor = 'grab'; });
 
+    // Resolution follows the GPU. Once per session the per-frame pass is timed at
+    // the starting resolution (behind the preloader on a first visit); from then
+    // on the pixel ratio is whatever makes that pass fit in 75% of a frame (30 fps
+    // on low-power devices, 60 elsewhere), from 0.5 up to the screen's own ratio,
+    // at most 2. Until it is measured, and in orbit mode, which traces every
+    // frame, the ratio is at most 0.7 on low-power devices and 1 elsewhere.
+    const FRAME_COST_KEY = 'blackhole-frame-ms-per-px';
+    let frameMsPerPx = 0;
+    try {
+        frameMsPerPx = Number(window.sessionStorage.getItem(FRAME_COST_KEY)) || 0;
+    } catch (e) { /* storage blocked */ }
+    const pixelRatio = () => {
+        const native = Math.min(window.devicePixelRatio || 1, 2);
+        const basic = Math.min(native, isLowPowerDevice ? 0.7 : 1.0);
+        if (!frameMsPerPx) return basic;
+        const budgetMs = (isLowPowerDevice ? 1000 / 30 : 1000 / 60) * 0.75;
+        const fit = Math.sqrt(budgetMs / (frameMsPerPx * window.innerWidth * window.innerHeight));
+        const ratio = Math.min(native, Math.max(0.5, Math.floor(fit * 20) / 20));
+        return interactive ? Math.min(ratio, basic) : ratio;
+    };
+
     const dbSize = new THREE.Vector2();
     const handleResize = () => {
         const w = window.innerWidth;
         const h = window.innerHeight;
-        // The shader runs per pixel: cap the resolution (lower on weak devices).
-        const qualityDpr = isLowPowerDevice ? 0.7 : 1.0;
-        const dpr = Math.min(window.devicePixelRatio || 1, qualityDpr);
+        const dpr = pixelRatio();
         renderer.setPixelRatio(dpr);
         renderer.setSize(w, h, false);
         composer.setPixelRatio(dpr);
@@ -871,6 +890,35 @@ function start() {
         return true;
     };
 
+    // Times the per-frame pass for pixelRatio(): a 1-pixel read makes the CPU wait
+    // for the GPU, so after draining the queue each run is timed on its own (best
+    // of three), minus what the read itself costs. Blocks for a few frames' time,
+    // once per session.
+    let framesBeforeTiming = 3;
+    const timeFrame = () => {
+        const px = new Uint8Array(4);
+        const drain = () => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+        const best = (work) => {
+            let ms = Infinity;
+            for (let i = 0; i < 3; i++) {
+                const t0 = performance.now();
+                work();
+                drain();
+                ms = Math.min(ms, performance.now() - t0);
+            }
+            return ms;
+        };
+        renderer.setRenderTarget(null);
+        drain();
+        const readMs = best(() => {});
+        const frameMs = Math.max(0.1, best(() => composer.render()) - readMs);
+        frameMsPerPx = frameMs / (dbSize.x * dbSize.y);
+        try {
+            window.sessionStorage.setItem(FRAME_COST_KEY, String(frameMsPerPx));
+        } catch (e) { /* storage blocked */ }
+        if (pixelRatio() !== renderer.getPixelRatio()) handleResize();
+    };
+
     const initTime = performance.now();
     let lastRenderMs = 0;
     let frameId;
@@ -919,6 +967,8 @@ function start() {
             bloomPass.enabled = halfFloatOK && interactive;
             composer.render();
             lastRenderMs = now;
+            // A few frames in, the shaders are compiled: time the frame once.
+            if (!frameMsPerPx && !interactive && --framesBeforeTiming <= 0) timeFrame();
         }
     };
     tick();
