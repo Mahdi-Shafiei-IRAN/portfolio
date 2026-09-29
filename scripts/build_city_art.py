@@ -43,13 +43,13 @@ CONTAINER_COLOURS = [  # (roof, body, ribs)
 ]
 
 # Tiny Dungeon cells used for people, in chars.png order. The player (Mahdi)
-# is cell 85 recoloured: dark hair, moustache, red sweater, dark jeans.
+# is cell 85 recoloured: dark hair, moustache, black shirt, dark jeans.
 CHARACTERS = [85, 96, 99, 100, 112, 84, 98, 86, 87]
 PLAYER_RECOLOUR = {
     (189, 108, 74): (72, 54, 58),     # hair
     (118, 59, 54): (50, 38, 44),      # hair shade, boots
-    (192, 203, 220): (178, 70, 56),   # shirt -> sweater
-    (139, 155, 180): (128, 46, 44),   # shirt shade
+    (192, 203, 220): (70, 72, 82),    # shirt -> black shirt (charcoal, so the outline still reads)
+    (139, 155, 180): (46, 48, 56),    # shirt shade
 }
 
 
