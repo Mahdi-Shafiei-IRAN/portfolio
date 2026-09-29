@@ -2,7 +2,7 @@
 
     python scripts/make_portrait.py
 
-Crops head and shoulders, swaps the busy background for flat sky blue, shrinks
+Crops head and shoulders, swaps the background for flat sky blue, shrinks
 to 48x48, reduces to a 24-colour palette and scales back up 2x with
 nearest-neighbour so the pixels stay crisp.
 """
@@ -14,8 +14,11 @@ ROOT = Path(__file__).resolve().parent.parent
 PHOTO = ROOT / 'static' / 'img' / 'profile.jpg'
 PORTRAIT = ROOT / 'static' / 'game' / 'img' / 'portrait.png'
 
-CROP = (105, 5, 295, 195)   # head and shoulders in the 400x400 photo
-HEAD = (40, 18, 146, 178)   # ellipse around the head, in crop coordinates
+CROP = (142, 33, 822, 713)  # head and shoulders in the 960x960 photo
+# Head ellipse and shoulder outline, as fractions of the crop's size.
+HEAD = (0.24, 0.06, 0.76, 0.84)
+SHOULDERS = [(0.0, 1.0), (0.25, 0.74), (0.75, 0.74), (1.0, 1.0)]
+CHEST = 0.82                # everything below this line is kept
 SKY = (124, 190, 240)
 
 
@@ -24,10 +27,10 @@ def flatten_background(image, colour=SKY):
     w, h = image.size
     mask = Image.new('L', image.size, 0)
     draw = ImageDraw.Draw(mask)
-    draw.ellipse(HEAD, fill=255)
-    draw.polygon([(10, h), (55, 160), (135, 160), (w - 10, h)], fill=255)
-    draw.rectangle((0, 178, w, h), fill=255)
-    mask = mask.filter(ImageFilter.GaussianBlur(2))
+    draw.ellipse((HEAD[0] * w, HEAD[1] * h, HEAD[2] * w, HEAD[3] * h), fill=255)
+    draw.polygon([(x * w, y * h) for x, y in SHOULDERS], fill=255)
+    draw.rectangle((0, CHEST * h, w, h), fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(w / 95))
     return Image.composite(image, Image.new('RGB', image.size, colour), mask)
 
 
